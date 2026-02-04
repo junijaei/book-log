@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { StatusBadge } from './status-badge';
+import { BookCover } from './book-cover';
 import type { ReadingRecord } from '@/types';
+import { formatDateRange, formatPageProgress, formatPercentage, FIELD_LABELS } from '@/lib/constants';
 
 interface BookCardProps {
   record: ReadingRecord;
@@ -15,26 +17,14 @@ export function BookCard({ record }: BookCardProps) {
       ? Math.round((reading_log.current_page / book.total_pages) * 100)
       : null;
 
-  const dateRange = [reading_log.start_date, reading_log.end_date]
-    .filter(Boolean)
-    .join(' ~ ') || null;
+  const dateRange = formatDateRange(reading_log.start_date, reading_log.end_date);
 
   return (
     <Link to={`/books/${reading_log.id}`} className="block">
       <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
         <CardHeader className="pb-4">
           <div className="flex gap-4">
-            {book.cover_image_url ? (
-              <img
-                src={book.cover_image_url}
-                alt={book.title}
-                className="w-20 h-28 object-cover rounded"
-              />
-            ) : (
-              <div className="w-20 h-28 bg-muted rounded flex items-center justify-center text-muted-foreground text-xs">
-                No Cover
-              </div>
-            )}
+            <BookCover url={book.cover_image_url} alt={book.title} size="sm" />
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-lg truncate">{book.title}</h3>
               <p className="text-sm text-muted-foreground truncate">{book.author}</p>
@@ -45,12 +35,13 @@ export function BookCard({ record }: BookCardProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
-          {progress !== null && (
+          {progress !== null && book.total_pages && reading_log.current_page && (
             <div>
               <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                <span>Progress</span>
+                <span>{FIELD_LABELS.PROGRESS}</span>
                 <span>
-                  {reading_log.current_page} / {book.total_pages} pages ({progress}%)
+                  {formatPageProgress(reading_log.current_page, book.total_pages)} (
+                  {formatPercentage(reading_log.current_page, book.total_pages)})
                 </span>
               </div>
               <div className="w-full bg-secondary rounded-full h-2">
@@ -61,11 +52,7 @@ export function BookCard({ record }: BookCardProps) {
               </div>
             </div>
           )}
-          {dateRange && (
-            <p className="text-xs text-muted-foreground">
-              {dateRange}
-            </p>
-          )}
+          {dateRange && <p className="text-xs text-muted-foreground">{dateRange}</p>}
         </CardContent>
       </Card>
     </Link>

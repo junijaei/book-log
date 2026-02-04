@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import {
+  createQuote,
+  deleteQuote,
+  deleteReadingLog,
+  getReadingRecord,
+  updateBook,
+  updateReadingLog,
+} from '@/api/mock-api';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
@@ -14,16 +16,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  getReadingRecord,
-  updateBook,
-  updateReadingLog,
-  deleteReadingLog,
-  createQuote,
-  updateQuote,
-  deleteQuote,
-} from '@/api/mock-api';
-import type { ReadingRecord, ReadingStatus, Quote } from '@/types';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { getReadingStatusLabel } from '@/lib/utils';
+import type { Quote, ReadingRecord, ReadingStatus } from '@/types';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 export function BookEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -174,7 +174,7 @@ export function BookEditPage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="text-center py-12">Loading...</div>
+        <div className="text-center py-12">불러오는 중입니다...</div>
       </div>
     );
   }
@@ -185,15 +185,15 @@ export function BookEditPage() {
       <div className="flex justify-between items-center mb-6">
         <Link to={`/books/${id}`}>
           <Button variant="outline" size="sm">
-            ← Cancel
+            ← 취소
           </Button>
         </Link>
         <div className="flex gap-2">
           <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-            Delete
+            삭제
           </Button>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? '저장중입니다...' : '저장하기'}
           </Button>
         </div>
       </div>
@@ -201,11 +201,11 @@ export function BookEditPage() {
       {/* Book Info */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Book Information</CardTitle>
+          <CardTitle>책 삭세 내용</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">제목</Label>
             <Input
               id="title"
               value={bookData.title}
@@ -213,7 +213,7 @@ export function BookEditPage() {
             />
           </div>
           <div>
-            <Label htmlFor="author">Author</Label>
+            <Label htmlFor="author">저자</Label>
             <Input
               id="author"
               value={bookData.author}
@@ -221,7 +221,7 @@ export function BookEditPage() {
             />
           </div>
           <div>
-            <Label htmlFor="cover">Cover Image URL</Label>
+            <Label htmlFor="cover">커버 이미지 URL</Label>
             <Input
               id="cover"
               value={bookData.cover_image_url}
@@ -229,7 +229,7 @@ export function BookEditPage() {
             />
           </div>
           <div>
-            <Label htmlFor="pages">Total Pages</Label>
+            <Label htmlFor="pages">총 페이지 수</Label>
             <Input
               id="pages"
               type="number"
@@ -247,20 +247,21 @@ export function BookEditPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="status">진행 상태</Label>
             <Select
               id="status"
               value={logData.status}
-              onChange={e => setLogData(prev => ({ ...prev, status: e.target.value as ReadingStatus }))}
+              onChange={e =>
+                setLogData(prev => ({ ...prev, status: e.target.value as ReadingStatus }))
+              }
             >
-              <option value="want_to_read">Want to Read</option>
-              <option value="reading">Reading</option>
-              <option value="finished">Finished</option>
-              <option value="abandoned">Abandoned</option>
+              {(['want_to_read', 'reading', 'finished', 'abandoned'] as const).map(status => (
+                <option value={status}>{getReadingStatusLabel(status)}</option>
+              ))}
             </Select>
           </div>
           <div>
-            <Label htmlFor="currentPage">Current Page</Label>
+            <Label htmlFor="currentPage">현재 페이지 수</Label>
             <Input
               id="currentPage"
               type="number"
@@ -269,7 +270,7 @@ export function BookEditPage() {
             />
           </div>
           <div>
-            <Label htmlFor="rating">Rating (1-5)</Label>
+            <Label htmlFor="rating">별점 (1-5)</Label>
             <Input
               id="rating"
               type="number"
@@ -281,7 +282,7 @@ export function BookEditPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="startDate">Start Date</Label>
+              <Label htmlFor="startDate">독서 시작일</Label>
               <Input
                 id="startDate"
                 type="date"
@@ -290,7 +291,7 @@ export function BookEditPage() {
               />
             </div>
             <div>
-              <Label htmlFor="endDate">End Date</Label>
+              <Label htmlFor="endDate">독서 종료일</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -300,7 +301,7 @@ export function BookEditPage() {
             </div>
           </div>
           <div>
-            <Label htmlFor="review">Review</Label>
+            <Label htmlFor="review">감상문</Label>
             <Textarea
               id="review"
               value={logData.review}
@@ -314,7 +315,7 @@ export function BookEditPage() {
       {/* Quotes */}
       <Card>
         <CardHeader>
-          <CardTitle>Quotes</CardTitle>
+          <CardTitle>인용구</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Existing quotes */}
@@ -322,13 +323,9 @@ export function BookEditPage() {
             <div key={quote.id} className="border rounded p-4 space-y-2">
               <p className="text-foreground">"{quote.text}"</p>
               <div className="flex justify-between items-center text-xs text-muted-foreground">
-                <span>Page {quote.page_number}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDeleteQuote(quote.id)}
-                >
-                  Remove
+                <span>페이지 {quote.page_number}</span>
+                <Button variant="ghost" size="sm" onClick={() => handleDeleteQuote(quote.id)}>
+                  삭제
                 </Button>
               </div>
             </div>
@@ -336,7 +333,7 @@ export function BookEditPage() {
 
           {/* Add new quote */}
           <div className="border-t pt-4 space-y-2">
-            <Label>Add New Quote</Label>
+            <Label>새 인용구 추가하기</Label>
             <Textarea
               placeholder="Quote text..."
               value={newQuoteText}
@@ -352,7 +349,7 @@ export function BookEditPage() {
                 className="w-32"
               />
               <Button onClick={handleAddQuote} disabled={!newQuoteText || !newQuotePage}>
-                Add Quote
+                저장하기
               </Button>
             </div>
           </div>
@@ -363,22 +360,22 @@ export function BookEditPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Reading Record</DialogTitle>
+            <DialogTitle>독서 기록 삭제하기</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this reading record? This action cannot be undone.
+              정말로 삭제하시겠습니까? 이 선택은 되돌릴 수 없습니다.
               {originalRecord && !originalRecord.book && (
                 <span className="block mt-2 font-medium">
-                  This will also delete the book as it has no other reading logs.
+                  다른 독서 기록이 없다면 책 정보도 삭제됩니다.
                 </span>
               )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
+              취소하기
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
-              Delete
+              삭제하기
             </Button>
           </DialogFooter>
         </DialogContent>

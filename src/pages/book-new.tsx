@@ -2,11 +2,22 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormField } from '@/components/form-field';
+import { PageHeader } from '@/components/page-header';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { createReadingRecord } from '@/api/mock-api';
 import type { ReadingStatus } from '@/types';
+import {
+  PAGE_TITLES,
+  BUTTON_LABELS,
+  FIELD_LABELS,
+  PLACEHOLDERS,
+  MESSAGES,
+  MISC,
+  getReadingStatusLabel,
+} from '@/lib/constants';
 
 export function BookNewPage() {
   const navigate = useNavigate();
@@ -26,7 +37,7 @@ export function BookNewPage() {
     e.preventDefault();
 
     if (!formData.title || !formData.author) {
-      alert('Title and author are required');
+      alert(MESSAGES.TITLE_AUTHOR_REQUIRED);
       return;
     }
 
@@ -49,7 +60,7 @@ export function BookNewPage() {
       navigate(`/books/${record.reading_log.id}`);
     } catch (error) {
       console.error('Failed to create book:', error);
-      alert('Failed to create book');
+      alert(MESSAGES.FAILED_TO_CREATE);
     } finally {
       setSaving(false);
     }
@@ -57,59 +68,55 @@ export function BookNewPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Add New Book</h1>
-        <Link to="/">
-          <Button variant="outline" size="sm">
-            Cancel
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title={PAGE_TITLES.BOOK_NEW}
+        actions={
+          <>
+            <ThemeToggle />
+            <Link to="/">
+              <Button variant="outline" size="sm">
+                {BUTTON_LABELS.CANCEL}
+              </Button>
+            </Link>
+          </>
+        }
+      />
 
       <form onSubmit={handleSubmit}>
         <Card>
           <CardHeader>
-            <CardTitle>Book Details</CardTitle>
+            <CardTitle>{MISC.BOOK_DETAILS}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="title">
-                Title <span className="text-destructive">*</span>
-              </Label>
+            <FormField label={FIELD_LABELS.TITLE} required htmlFor="title">
               <Input
                 id="title"
                 required
                 value={formData.title}
                 onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
               />
-            </div>
+            </FormField>
 
-            <div>
-              <Label htmlFor="author">
-                Author <span className="text-destructive">*</span>
-              </Label>
+            <FormField label={FIELD_LABELS.AUTHOR} required htmlFor="author">
               <Input
                 id="author"
                 required
                 value={formData.author}
                 onChange={e => setFormData(prev => ({ ...prev, author: e.target.value }))}
               />
-            </div>
+            </FormField>
 
-            <div>
-              <Label htmlFor="cover">Cover Image URL</Label>
+            <FormField label={FIELD_LABELS.COVER_IMAGE_URL} htmlFor="cover">
               <Input
                 id="cover"
                 type="url"
                 value={formData.cover_image_url}
                 onChange={e => setFormData(prev => ({ ...prev, cover_image_url: e.target.value }))}
-                placeholder="https://example.com/cover.jpg"
+                placeholder={PLACEHOLDERS.COVER_IMAGE_URL}
               />
-            </div>
+            </FormField>
 
-            <div>
-              <Label htmlFor="pages">Total Pages</Label>
+            <FormField label={FIELD_LABELS.TOTAL_PAGES} htmlFor="pages">
               <Input
                 id="pages"
                 type="number"
@@ -117,10 +124,9 @@ export function BookNewPage() {
                 value={formData.total_pages}
                 onChange={e => setFormData(prev => ({ ...prev, total_pages: e.target.value }))}
               />
-            </div>
+            </FormField>
 
-            <div>
-              <Label htmlFor="status">Reading Status</Label>
+            <FormField label={FIELD_LABELS.STATUS} htmlFor="status">
               <Select
                 id="status"
                 value={formData.status}
@@ -128,37 +134,36 @@ export function BookNewPage() {
                   setFormData(prev => ({ ...prev, status: e.target.value as ReadingStatus }))
                 }
               >
-                <option value="want_to_read">Want to Read</option>
-                <option value="reading">Reading</option>
-                <option value="finished">Finished</option>
-                <option value="abandoned">Abandoned</option>
+                {(['want_to_read', 'reading', 'finished', 'abandoned'] as const).map(status => (
+                  <option key={status} value={status}>
+                    {getReadingStatusLabel(status)}
+                  </option>
+                ))}
               </Select>
-            </div>
+            </FormField>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="startDate">Start Date</Label>
+              <FormField label={FIELD_LABELS.START_DATE} htmlFor="startDate">
                 <Input
                   id="startDate"
                   type="date"
                   value={formData.start_date}
                   onChange={e => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
                 />
-              </div>
-              <div>
-                <Label htmlFor="endDate">End Date</Label>
+              </FormField>
+              <FormField label={FIELD_LABELS.END_DATE} htmlFor="endDate">
                 <Input
                   id="endDate"
                   type="date"
                   value={formData.end_date}
                   onChange={e => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
                 />
-              </div>
+              </FormField>
             </div>
 
             <div className="pt-4">
               <Button type="submit" className="w-full" disabled={saving}>
-                {saving ? 'Creating...' : 'Create Book'}
+                {saving ? BUTTON_LABELS.CREATING : BUTTON_LABELS.CREATE}
               </Button>
             </div>
           </CardContent>

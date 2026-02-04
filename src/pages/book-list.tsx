@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { BookCard } from '@/components/book-card';
+import { PageHeader } from '@/components/page-header';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { getReadingRecords } from '@/api/mock-api';
 import type {
   ReadingRecord,
@@ -10,6 +12,14 @@ import type {
   ReadingRecordSort,
   ReadingStatus,
 } from '@/types';
+import {
+  PAGE_TITLES,
+  BUTTON_LABELS,
+  PLACEHOLDERS,
+  MESSAGES,
+  FILTER_LABELS,
+  getReadingStatusLabel,
+} from '@/lib/constants';
 
 export function BookListPage() {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
@@ -90,18 +100,23 @@ export function BookListPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Reading Log</h1>
-        <Link to="/books/new">
-          <Button>Add Book</Button>
-        </Link>
-      </div>
+      <PageHeader
+        title={PAGE_TITLES.BOOK_LIST}
+        actions={
+          <>
+            <ThemeToggle />
+            <Link to="/books/new">
+              <Button>{BUTTON_LABELS.ADD_BOOK}</Button>
+            </Link>
+          </>
+        }
+      />
 
       {/* Filters */}
       <div className="mb-6 space-y-4">
         <Input
           type="search"
-          placeholder="Search by title or author..."
+          placeholder={PLACEHOLDERS.SEARCH}
           value={filters.search || ''}
           onChange={handleSearchChange}
           className="max-w-md"
@@ -123,12 +138,7 @@ export function BookListPage() {
               size="sm"
               onClick={() => handleStatusFilter(status)}
             >
-              {status === 'all'
-                ? 'All'
-                : status
-                    .split('_')
-                    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-                    .join(' ')}
+              {status === 'all' ? FILTER_LABELS.ALL : getReadingStatusLabel(status)}
             </Button>
           ))}
         </div>
@@ -139,21 +149,21 @@ export function BookListPage() {
             size="sm"
             onClick={() => setSort({ field: 'updated_at', direction: 'desc' })}
           >
-            Recently Updated
+            {FILTER_LABELS.SORT_BY_UPDATED}
           </Button>
           <Button
             variant={sort.field === 'start_date' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSort({ field: 'start_date', direction: 'desc' })}
           >
-            Start Date
+            {FILTER_LABELS.SORT_BY_START_DATE}
           </Button>
           <Button
             variant={sort.field === 'end_date' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSort({ field: 'end_date', direction: 'desc' })}
           >
-            Finish Date
+            {FILTER_LABELS.SORT_BY_END_DATE}
           </Button>
         </div>
       </div>
@@ -165,16 +175,14 @@ export function BookListPage() {
         ))}
       </div>
 
-      {loading && (
-        <div className="text-center py-8 text-muted-foreground">Loading...</div>
-      )}
+      {loading && <div className="text-center py-8 text-muted-foreground">{MESSAGES.LOADING}</div>}
 
       {!loading && records.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
-          <p>No books found.</p>
+          <p>{MESSAGES.NO_BOOKS_FOUND}</p>
           <Link to="/books/new">
             <Button variant="outline" className="mt-4">
-              Add your first book
+              {BUTTON_LABELS.ADD_FIRST_BOOK}
             </Button>
           </Link>
         </div>
