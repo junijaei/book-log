@@ -4,8 +4,6 @@
  * Page for creating a new book entry.
  */
 
-import { useForm } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
 import { createBook } from '@/api';
 import { FormField } from '@/components/form-field';
 import { PageHeader } from '@/components/page-header';
@@ -22,6 +20,8 @@ import {
   PLACEHOLDERS,
 } from '@/lib/constants';
 import type { BookFormData } from '@/types';
+import { useForm } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router-dom';
 
 export function BookNewPage() {
   const navigate = useNavigate();
@@ -48,7 +48,7 @@ export function BookNewPage() {
         total_pages: data.total_pages ? parseInt(data.total_pages) : null,
       });
 
-      navigate(`/books/${response.reading_log_id}`);
+      navigate(`/books/${response.reading_log.id}`);
     } catch (error) {
       console.error('Failed to create book:', error);
       alert(MESSAGES.FAILED_TO_CREATE);

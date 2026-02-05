@@ -4,7 +4,7 @@
  * Request/response types for API operations.
  */
 
-import type { Quote, ReadingStatus } from './entities';
+import type { Book, Quote, ReadingLog, ReadingStatus } from './entities';
 
 // =============================================================================
 // Book API Types
@@ -20,8 +20,8 @@ export interface CreateBookInput {
 
 /** Response from create-book API (book created with empty reading log) */
 export interface CreateBookResponse {
-  book_id: string;
-  reading_log_id: string;
+  book: Book;
+  reading_log: ReadingLog;
 }
 
 // =============================================================================
