@@ -1,16 +1,10 @@
-/**
- * Book New Page
- *
- * Page for creating a new book entry.
- */
-
-import { createBook } from '@/api';
 import { FormField } from '@/components/form-field';
 import { PageHeader } from '@/components/page-header';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { useCreateBook } from '@/hooks';
 import {
   BUTTON_LABELS,
   FIELD_LABELS,
@@ -25,11 +19,12 @@ import { Link, useNavigate } from 'react-router-dom';
 
 export function BookNewPage() {
   const navigate = useNavigate();
+  const createBookMutation = useCreateBook();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<BookFormData>({
     defaultValues: {
       title: '',
@@ -41,7 +36,7 @@ export function BookNewPage() {
 
   const onSubmit = async (data: BookFormData) => {
     try {
-      const response = await createBook({
+      const response = await createBookMutation.mutateAsync({
         title: data.title,
         author: data.author,
         cover_image_url: data.cover_image_url || null,
@@ -123,8 +118,8 @@ export function BookNewPage() {
             </FormField>
 
             <div className="pt-4">
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? BUTTON_LABELS.CREATING : BUTTON_LABELS.CREATE}
+              <Button type="submit" className="w-full" disabled={createBookMutation.isPending}>
+                {createBookMutation.isPending ? BUTTON_LABELS.CREATING : BUTTON_LABELS.CREATE}
               </Button>
             </div>
           </CardContent>

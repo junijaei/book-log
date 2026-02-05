@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { createQuote, deleteQuote, getReadingRecord, updateQuote } from '@/api';
 import { BookCover } from '@/components/book-cover';
 import { DateRangeDisplay } from '@/components/date-range-display';
+import { FormField } from '@/components/form-field';
 import { ProgressBar } from '@/components/progress-bar';
 import { RatingDisplay } from '@/components/rating-display';
 import { StatusBadge } from '@/components/status-badge';
@@ -19,73 +19,46 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { FormField } from '@/components/form-field';
+import { useCreateQuote, useDeleteQuote, useReadingRecord, useUpdateQuote } from '@/hooks';
 import { BUTTON_LABELS, FIELD_LABELS, MESSAGES, MISC, PLACEHOLDERS } from '@/lib/constants';
-import type { Quote, ReadingRecord } from '@/types';
+import type { Quote } from '@/types';
 
 export function BookDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [record, setRecord] = useState<ReadingRecord | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: record, isLoading } = useReadingRecord(id);
 
-  // Quote management state
+  const createQuoteMutation = useCreateQuote();
+  const updateQuoteMutation = useUpdateQuote(id ?? '');
+  const deleteQuoteMutation = useDeleteQuote(id ?? '');
+
   const [showAddQuote, setShowAddQuote] = useState(false);
   const [newQuoteText, setNewQuoteText] = useState('');
   const [newQuotePage, setNewQuotePage] = useState('');
-  const [addingQuote, setAddingQuote] = useState(false);
 
-  // Edit quote state
   const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
   const [editQuoteText, setEditQuoteText] = useState('');
   const [editQuotePage, setEditQuotePage] = useState('');
-  const [savingQuote, setSavingQuote] = useState(false);
 
-  // Delete quote state
-  const [deletingQuoteId, setDeletingQuoteId] = useState<string | null>(null);
   const [deleteQuoteDialogOpen, setDeleteQuoteDialogOpen] = useState(false);
   const [quoteToDelete, setQuoteToDelete] = useState<Quote | null>(null);
-
-  useEffect(() => {
-    if (!id) return;
-
-    const loadRecord = async () => {
-      try {
-        const data = await getReadingRecord(id);
-        setRecord(data);
-      } catch (error) {
-        console.error('Failed to load record:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadRecord();
-  }, [id]);
 
   const handleAddQuote = async () => {
     if (!id || !newQuoteText.trim() || !newQuotePage) return;
 
-    setAddingQuote(true);
     try {
-      const quote = await createQuote({
+      await createQuoteMutation.mutateAsync({
         reading_log_id: id,
         text: newQuoteText.trim(),
         page_number: parseInt(newQuotePage),
         noted_at: new Date().toISOString().split('T')[0],
       });
 
-      // Update local state with new quote
-      setRecord(prev => (prev ? { ...prev, quotes: [...prev.quotes, quote] } : prev));
-
-      // Reset form
       setNewQuoteText('');
       setNewQuotePage('');
       setShowAddQuote(false);
     } catch (error) {
       console.error('Failed to add quote:', error);
       alert(MESSAGES.FAILED_TO_CREATE);
-    } finally {
-      setAddingQuote(false);
     }
   };
 
@@ -98,30 +71,17 @@ export function BookDetailPage() {
   const handleUpdateQuote = async () => {
     if (!editingQuote || !editQuoteText.trim() || !editQuotePage) return;
 
-    setSavingQuote(true);
     try {
-      const updated = await updateQuote({
+      await updateQuoteMutation.mutateAsync({
         id: editingQuote.id,
         text: editQuoteText.trim(),
         page_number: parseInt(editQuotePage),
       });
 
-      // Update local state
-      setRecord(prev =>
-        prev
-          ? {
-              ...prev,
-              quotes: prev.quotes.map(q => (q.id === updated.id ? updated : q)),
-            }
-          : prev
-      );
-
       setEditingQuote(null);
     } catch (error) {
       console.error('Failed to update quote:', error);
       alert(MESSAGES.FAILED_TO_SAVE);
-    } finally {
-      setSavingQuote(false);
     }
   };
 
@@ -133,31 +93,18 @@ export function BookDetailPage() {
   const handleDeleteQuote = async () => {
     if (!quoteToDelete) return;
 
-    setDeletingQuoteId(quoteToDelete.id);
     try {
-      await deleteQuote({ id: quoteToDelete.id });
-
-      // Update local state
-      setRecord(prev =>
-        prev
-          ? {
-              ...prev,
-              quotes: prev.quotes.filter(q => q.id !== quoteToDelete.id),
-            }
-          : prev
-      );
+      await deleteQuoteMutation.mutateAsync({ id: quoteToDelete.id });
 
       setDeleteQuoteDialogOpen(false);
       setQuoteToDelete(null);
     } catch (error) {
       console.error('Failed to delete quote:', error);
       alert(MESSAGES.FAILED_TO_DELETE);
-    } finally {
-      setDeletingQuoteId(null);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="text-center py-12">{MESSAGES.LOADING}</div>
@@ -182,7 +129,6 @@ export function BookDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Link to="/">
           <Button variant="outline" size="sm">
@@ -197,7 +143,6 @@ export function BookDetailPage() {
         </div>
       </div>
 
-      {/* Book Info Card */}
       <Card className="mb-6">
         <CardHeader>
           <div className="flex gap-6">
@@ -210,20 +155,16 @@ export function BookDetailPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Progress */}
           <ProgressBar
             currentPage={reading_log.current_page}
             totalPages={book.total_pages}
             showLabel={true}
           />
 
-          {/* Rating */}
           {reading_log.rating && <RatingDisplay rating={reading_log.rating} />}
 
-          {/* Dates */}
           <DateRangeDisplay startDate={reading_log.start_date} endDate={reading_log.end_date} />
 
-          {/* Review */}
           {reading_log.review && (
             <div>
               <h3 className="font-medium text-sm mb-2">{FIELD_LABELS.REVIEW}</h3>
@@ -233,7 +174,6 @@ export function BookDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Quotes */}
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
@@ -246,7 +186,6 @@ export function BookDetailPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Add Quote Form */}
           {showAddQuote && (
             <div className="mb-6 p-4 border rounded-lg bg-muted/30">
               <h4 className="font-medium mb-3">{MISC.ADD_NEW_QUOTE}</h4>
@@ -267,21 +206,22 @@ export function BookDetailPage() {
                   />
                   <Button
                     onClick={handleAddQuote}
-                    disabled={!newQuoteText.trim() || !newQuotePage || addingQuote}
+                    disabled={
+                      !newQuoteText.trim() || !newQuotePage || createQuoteMutation.isPending
+                    }
                   >
-                    {addingQuote ? MESSAGES.LOADING : BUTTON_LABELS.ADD}
+                    {createQuoteMutation.isPending ? MESSAGES.LOADING : BUTTON_LABELS.ADD}
                   </Button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Quote List */}
           {quotes.length > 0 ? (
             <div className="space-y-4">
               {quotes.map(quote => (
                 <div key={quote.id} className="border-l-4 border-primary/30 pl-4 py-2 group">
-                  <p className="text-foreground mb-2">&ldquo;{quote.text}&rdquo;</p>
+                  <p className="text-foreground mb-2 whitespace-pre-wrap">&ldquo;{quote.text}&rdquo;</p>
                   <div className="flex justify-between items-center">
                     <div className="flex gap-4 text-xs text-muted-foreground">
                       <span>
@@ -297,7 +237,7 @@ export function BookDetailPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => openDeleteDialog(quote)}
-                        disabled={deletingQuoteId === quote.id}
+                        disabled={deleteQuoteMutation.isPending}
                       >
                         {BUTTON_LABELS.DELETE}
                       </Button>
@@ -314,7 +254,6 @@ export function BookDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Edit Quote Dialog */}
       <Dialog open={!!editingQuote} onOpenChange={open => !open && setEditingQuote(null)}>
         <DialogContent>
           <DialogHeader>
@@ -339,20 +278,23 @@ export function BookDetailPage() {
             </FormField>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingQuote(null)} disabled={savingQuote}>
+            <Button
+              variant="outline"
+              onClick={() => setEditingQuote(null)}
+              disabled={updateQuoteMutation.isPending}
+            >
               {BUTTON_LABELS.CANCEL}
             </Button>
             <Button
               onClick={handleUpdateQuote}
-              disabled={!editQuoteText.trim() || !editQuotePage || savingQuote}
+              disabled={!editQuoteText.trim() || !editQuotePage || updateQuoteMutation.isPending}
             >
-              {savingQuote ? BUTTON_LABELS.SAVING : BUTTON_LABELS.SAVE}
+              {updateQuoteMutation.isPending ? BUTTON_LABELS.SAVING : BUTTON_LABELS.SAVE}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Quote Confirmation Dialog */}
       <Dialog open={deleteQuoteDialogOpen} onOpenChange={setDeleteQuoteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -363,12 +305,16 @@ export function BookDetailPage() {
             <Button
               variant="outline"
               onClick={() => setDeleteQuoteDialogOpen(false)}
-              disabled={!!deletingQuoteId}
+              disabled={deleteQuoteMutation.isPending}
             >
               {BUTTON_LABELS.CANCEL}
             </Button>
-            <Button variant="destructive" onClick={handleDeleteQuote} disabled={!!deletingQuoteId}>
-              {deletingQuoteId ? MESSAGES.DELETING : BUTTON_LABELS.DELETE}
+            <Button
+              variant="destructive"
+              onClick={handleDeleteQuote}
+              disabled={deleteQuoteMutation.isPending}
+            >
+              {deleteQuoteMutation.isPending ? MESSAGES.DELETING : BUTTON_LABELS.DELETE}
             </Button>
           </DialogFooter>
         </DialogContent>

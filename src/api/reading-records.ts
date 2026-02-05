@@ -41,8 +41,8 @@ export async function getReadingRecords(
  * Fetches a single reading record by reading log ID.
  */
 export async function getReadingRecord(id: string): Promise<ReadingRecord | null> {
-  const response = await invokeEdgeFunction<PaginatedResponse<ReadingRecord>>(
-    'get-reading-records',
+  const response = await invokeEdgeFunction<{data: ReadingRecord}>(
+    'get-reading-record',
     {
       body: {
         filters: { reading_log_id: id },
@@ -51,7 +51,7 @@ export async function getReadingRecord(id: string): Promise<ReadingRecord | null
     }
   );
 
-  return response.data.length > 0 ? response.data[0] : null;
+  return response.data ? response.data : null;
 }
 
 /**

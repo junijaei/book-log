@@ -1,9 +1,9 @@
-import { getReadingRecords } from '@/api';
 import { BookCard } from '@/components/book-card';
 import { PageHeader } from '@/components/page-header';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useReadingRecords } from '@/hooks';
 import {
   BUTTON_LABELS,
   FILTER_LABELS,
@@ -12,62 +12,25 @@ import {
   PAGE_TITLES,
   PLACEHOLDERS,
 } from '@/lib/constants';
-import type {
-  ReadingRecord,
-  ReadingRecordFilters,
-  ReadingRecordSort,
-  ReadingStatus,
-} from '@/types';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ReadingRecordFilters, ReadingRecordSort, ReadingStatus } from '@/types';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 export function BookListPage() {
-  const [records, setRecords] = useState<ReadingRecord[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [cursor, setCursor] = useState<string | undefined>();
-
   const [filters, setFilters] = useState<ReadingRecordFilters>({});
   const [sort, setSort] = useState<ReadingRecordSort>({
     field: 'updated_at',
     direction: 'desc',
   });
 
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useReadingRecords(
+    filters,
+    sort
+  );
+
+  const records = useMemo(() => data?.pages.flatMap(page => page.data) ?? [], [data]);
+
   const observerTarget = useRef<HTMLDivElement>(null);
-
-  const loadMore = useCallback(async () => {
-    if (loading || !hasMore) return;
-
-    setLoading(true);
-    try {
-      const response = await getReadingRecords(filters, sort, {
-        cursor,
-        limit: 10,
-      });
-
-      setRecords(prev => (cursor ? [...prev, ...response.data] : response.data));
-      setCursor(response.next_cursor || undefined);
-      setHasMore(response.has_more);
-    } catch (error) {
-      console.error('Failed to load records:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [cursor, filters, sort]);
-
-  // Reset and reload when filters/sort change
-  useEffect(() => {
-    setRecords([]);
-    setCursor(undefined);
-    setHasMore(true);
-  }, [filters, sort]);
-
-  // Load initial data
-  useEffect(() => {
-    if (cursor === undefined && hasMore) {
-      loadMore();
-    }
-  }, [cursor, hasMore, loadMore]);
 
   useEffect(() => {
     const target = observerTarget.current;
@@ -75,8 +38,8 @@ export function BookListPage() {
 
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
-          loadMore();
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
         }
       },
       { threshold: 0.1 }
@@ -84,7 +47,7 @@ export function BookListPage() {
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [hasMore, loadMore]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters(prev => ({ ...prev, search: e.target.value || undefined }));
@@ -111,7 +74,6 @@ export function BookListPage() {
         }
       />
 
-      {/* Filters */}
       <div className="mb-6 space-y-4">
         <Input
           type="search"
@@ -167,16 +129,17 @@ export function BookListPage() {
         </div>
       </div>
 
-      {/* Book Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {records.map(record => (
           <BookCard key={record.reading_log.id} record={record} />
         ))}
       </div>
 
-      {loading && <div className="text-center py-8 text-muted-foreground">{MESSAGES.LOADING}</div>}
+      {(isLoading || isFetchingNextPage) && (
+        <div className="text-center py-8 text-muted-foreground">{MESSAGES.LOADING}</div>
+      )}
 
-      {!loading && records.length === 0 && (
+      {!isLoading && records.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <p>{MESSAGES.NO_BOOKS_FOUND}</p>
           <Link to="/books/new">
@@ -187,7 +150,6 @@ export function BookListPage() {
         </div>
       )}
 
-      {/* Intersection observer target */}
       <div ref={observerTarget} className="h-10" />
     </div>
   );

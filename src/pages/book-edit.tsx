@@ -1,7 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { deleteReadingRecord, getReadingRecord, upsertReadingRecord } from '@/api';
 import { FormField } from '@/components/form-field';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useDeleteReadingRecord, useReadingRecord, useUpsertReadingRecord } from '@/hooks';
 import {
   BUTTON_LABELS,
   FIELD_LABELS,
@@ -24,25 +24,19 @@ import {
   MISC,
   PLACEHOLDERS,
 } from '@/lib/constants';
-import type {
-  BookEditFormData,
-  LocalQuote,
-  NewQuoteFormData,
-  Quote,
-  ReadingRecord,
-  ReadingStatus,
-} from '@/types';
+import type { BookEditFormData, LocalQuote, NewQuoteFormData, Quote, ReadingStatus } from '@/types';
 
 const READING_STATUSES: ReadingStatus[] = ['want_to_read', 'reading', 'finished', 'abandoned'];
 
 export function BookEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // Main form for book + reading log
+  const { data: record, isLoading } = useReadingRecord(id);
+  const upsertMutation = useUpsertReadingRecord();
+  const deleteMutation = useDeleteReadingRecord();
+
   const {
     register,
     handleSubmit,
@@ -63,11 +57,9 @@ export function BookEditPage() {
     },
   });
 
-  // Quote management (separate from main form due to dynamic add/remove)
   const [quotes, setQuotes] = useState<LocalQuote[]>([]);
   const [deletedQuoteIds, setDeletedQuoteIds] = useState<string[]>([]);
 
-  // New quote form
   const {
     register: registerQuote,
     handleSubmit: handleQuoteSubmit,
@@ -80,60 +72,39 @@ export function BookEditPage() {
   const newQuoteText = watchQuote('text');
   const newQuotePage = watchQuote('page_number');
 
-  const [originalRecord, setOriginalRecord] = useState<ReadingRecord | null>(null);
-
   useEffect(() => {
-    if (!id) return;
+    if (!record) return;
 
-    const loadRecord = async () => {
-      try {
-        const data = await getReadingRecord(id);
-        if (!data) {
-          navigate('/');
-          return;
-        }
+    reset({
+      title: record.book.title,
+      author: record.book.author,
+      cover_image_url: record.book.cover_image_url || '',
+      total_pages: record.book.total_pages?.toString() || '',
+      status: record.reading_log.status,
+      current_page: record.reading_log.current_page?.toString() || '',
+      rating: record.reading_log.rating?.toString() || '',
+      start_date: record.reading_log.start_date || '',
+      end_date: record.reading_log.end_date || '',
+      review: record.reading_log.review || '',
+    });
 
-        setOriginalRecord(data);
-
-        // Populate form with loaded data
-        reset({
-          title: data.book.title,
-          author: data.book.author,
-          cover_image_url: data.book.cover_image_url || '',
-          total_pages: data.book.total_pages?.toString() || '',
-          status: data.reading_log.status,
-          current_page: data.reading_log.current_page?.toString() || '',
-          rating: data.reading_log.rating?.toString() || '',
-          start_date: data.reading_log.start_date || '',
-          end_date: data.reading_log.end_date || '',
-          review: data.reading_log.review || '',
-        });
-
-        setQuotes(
-          data.quotes.map((q: Quote) => ({
-            id: q.id,
-            text: q.text,
-            page_number: q.page_number,
-            noted_at: q.noted_at,
-          }))
-        );
-      } catch (error) {
-        console.error('Failed to load record:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadRecord();
-  }, [id, navigate, reset]);
+    setQuotes(
+      record.quotes.map((q: Quote) => ({
+        id: q.id,
+        text: q.text,
+        page_number: q.page_number,
+        noted_at: q.noted_at,
+      }))
+    );
+  }, [record, reset]);
 
   const onSubmit = async (data: BookEditFormData) => {
-    if (!originalRecord || !id) return;
+    if (!record || !id) return;
 
     try {
-      await upsertReadingRecord({
+      await upsertMutation.mutateAsync({
         book: {
-          id: originalRecord.book.id,
+          id: record.book.id,
           title: data.title,
           author: data.author,
           cover_image_url: data.cover_image_url || null,
@@ -167,15 +138,13 @@ export function BookEditPage() {
   const handleDelete = async () => {
     if (!id) return;
 
-    setDeleting(true);
     try {
-      await deleteReadingRecord({ reading_log_id: id });
+      await deleteMutation.mutateAsync({ reading_log_id: id });
       navigate('/');
     } catch (error) {
       console.error('Failed to delete:', error);
       alert(MESSAGES.FAILED_TO_DELETE);
     } finally {
-      setDeleting(false);
       setDeleteDialogOpen(false);
     }
   };
@@ -202,7 +171,7 @@ export function BookEditPage() {
     setQuotes(prev => prev.filter((_, i) => i !== index));
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="text-center py-12">{MESSAGES.LOADING}</div>
@@ -210,9 +179,21 @@ export function BookEditPage() {
     );
   }
 
+  if (!record) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground mb-4">{MESSAGES.BOOK_NOT_FOUND}</p>
+          <Link to="/">
+            <Button variant="outline">{BUTTON_LABELS.BACK_TO_LIST}</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Link to={`/books/${id}`}>
           <Button variant="outline" size="sm">
@@ -223,18 +204,20 @@ export function BookEditPage() {
           <Button
             variant="destructive"
             onClick={() => setDeleteDialogOpen(true)}
-            disabled={deleting}
+            disabled={deleteMutation.isPending}
           >
             {BUTTON_LABELS.DELETE}
           </Button>
-          <Button onClick={handleSubmit(onSubmit)} disabled={isSubmitting || deleting}>
+          <Button
+            onClick={handleSubmit(onSubmit)}
+            disabled={isSubmitting || deleteMutation.isPending}
+          >
             {isSubmitting ? BUTTON_LABELS.SAVING : BUTTON_LABELS.SAVE}
           </Button>
         </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        {/* Book Info */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>{MISC.BOOK_DETAILS}</CardTitle>
@@ -258,7 +241,6 @@ export function BookEditPage() {
           </CardContent>
         </Card>
 
-        {/* Reading Log */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>{MISC.READING_LOG}</CardTitle>
@@ -299,13 +281,11 @@ export function BookEditPage() {
         </Card>
       </form>
 
-      {/* Quotes */}
       <Card>
         <CardHeader>
           <CardTitle>{FIELD_LABELS.QUOTES}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Existing quotes */}
           {quotes.map((quote, index) => (
             <div key={quote.id ?? `new-${index}`} className="border rounded p-4 space-y-2">
               <p className="text-foreground">"{quote.text}"</p>
@@ -323,7 +303,6 @@ export function BookEditPage() {
             </div>
           ))}
 
-          {/* Add new quote */}
           <div className="border-t pt-4 space-y-2">
             <FormField label={MISC.ADD_NEW_QUOTE} htmlFor="new_quote_text">
               <Textarea
@@ -352,7 +331,6 @@ export function BookEditPage() {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -363,12 +341,16 @@ export function BookEditPage() {
             <Button
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
-              disabled={deleting}
+              disabled={deleteMutation.isPending}
             >
               {BUTTON_LABELS.CANCEL}
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-              {deleting ? MESSAGES.DELETING : BUTTON_LABELS.DELETE}
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? MESSAGES.DELETING : BUTTON_LABELS.DELETE}
             </Button>
           </DialogFooter>
         </DialogContent>
