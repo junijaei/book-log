@@ -1,68 +1,57 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+/**
+ * Book New Page
+ *
+ * Page for creating a new book entry.
+ */
+
+import { useForm } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router-dom';
+import { createBook } from '@/api';
 import { FormField } from '@/components/form-field';
 import { PageHeader } from '@/components/page-header';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { createReadingRecord } from '@/api/mock-api';
-import type { ReadingStatus } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
-  PAGE_TITLES,
   BUTTON_LABELS,
   FIELD_LABELS,
-  PLACEHOLDERS,
   MESSAGES,
   MISC,
-  getReadingStatusLabel,
+  PAGE_TITLES,
+  PLACEHOLDERS,
 } from '@/lib/constants';
+import type { BookFormData } from '@/types';
 
 export function BookNewPage() {
   const navigate = useNavigate();
-  const [saving, setSaving] = useState(false);
 
-  const [formData, setFormData] = useState({
-    title: '',
-    author: '',
-    cover_image_url: '',
-    total_pages: '',
-    status: 'want_to_read' as ReadingStatus,
-    start_date: '',
-    end_date: '',
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<BookFormData>({
+    defaultValues: {
+      title: '',
+      author: '',
+      cover_image_url: '',
+      total_pages: '',
+    },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.title || !formData.author) {
-      alert(MESSAGES.TITLE_AUTHOR_REQUIRED);
-      return;
-    }
-
-    setSaving(true);
+  const onSubmit = async (data: BookFormData) => {
     try {
-      const record = await createReadingRecord(
-        {
-          title: formData.title,
-          author: formData.author,
-          cover_image_url: formData.cover_image_url || null,
-          total_pages: formData.total_pages ? parseInt(formData.total_pages) : null,
-        },
-        {
-          status: formData.status,
-          start_date: formData.start_date || null,
-          end_date: formData.end_date || null,
-        }
-      );
+      const response = await createBook({
+        title: data.title,
+        author: data.author,
+        cover_image_url: data.cover_image_url || null,
+        total_pages: data.total_pages ? parseInt(data.total_pages) : null,
+      });
 
-      navigate(`/books/${record.reading_log.id}`);
+      navigate(`/books/${response.reading_log_id}`);
     } catch (error) {
       console.error('Failed to create book:', error);
       alert(MESSAGES.FAILED_TO_CREATE);
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -82,88 +71,60 @@ export function BookNewPage() {
         }
       />
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <Card>
           <CardHeader>
             <CardTitle>{MISC.BOOK_DETAILS}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <FormField label={FIELD_LABELS.TITLE} required htmlFor="title">
+            <FormField
+              label={FIELD_LABELS.TITLE}
+              required
+              htmlFor="title"
+              error={errors.title?.message}
+            >
               <Input
                 id="title"
-                required
-                value={formData.title}
-                onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                {...register('title', { required: MESSAGES.TITLE_AUTHOR_REQUIRED })}
               />
             </FormField>
 
-            <FormField label={FIELD_LABELS.AUTHOR} required htmlFor="author">
+            <FormField
+              label={FIELD_LABELS.AUTHOR}
+              required
+              htmlFor="author"
+              error={errors.author?.message}
+            >
               <Input
                 id="author"
-                required
-                value={formData.author}
-                onChange={e => setFormData(prev => ({ ...prev, author: e.target.value }))}
+                {...register('author', { required: MESSAGES.TITLE_AUTHOR_REQUIRED })}
               />
             </FormField>
 
-            <FormField label={FIELD_LABELS.COVER_IMAGE_URL} htmlFor="cover">
+            <FormField label={FIELD_LABELS.COVER_IMAGE_URL} htmlFor="cover_image_url">
               <Input
-                id="cover"
+                id="cover_image_url"
                 type="url"
-                value={formData.cover_image_url}
-                onChange={e => setFormData(prev => ({ ...prev, cover_image_url: e.target.value }))}
                 placeholder={PLACEHOLDERS.COVER_IMAGE_URL}
+                {...register('cover_image_url')}
               />
             </FormField>
 
-            <FormField label={FIELD_LABELS.TOTAL_PAGES} htmlFor="pages">
+            <FormField label={FIELD_LABELS.TOTAL_PAGES} htmlFor="total_pages">
               <Input
-                id="pages"
+                id="total_pages"
                 type="number"
                 min="1"
-                value={formData.total_pages}
-                onChange={e => setFormData(prev => ({ ...prev, total_pages: e.target.value }))}
+                {...register('total_pages', {
+                  validate: value =>
+                    !value || parseInt(value) > 0 || '페이지 수는 1 이상이어야 합니다',
+                })}
               />
             </FormField>
 
-            <FormField label={FIELD_LABELS.STATUS} htmlFor="status">
-              <Select
-                id="status"
-                value={formData.status}
-                onChange={e =>
-                  setFormData(prev => ({ ...prev, status: e.target.value as ReadingStatus }))
-                }
-              >
-                {(['want_to_read', 'reading', 'finished', 'abandoned'] as const).map(status => (
-                  <option key={status} value={status}>
-                    {getReadingStatusLabel(status)}
-                  </option>
-                ))}
-              </Select>
-            </FormField>
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField label={FIELD_LABELS.START_DATE} htmlFor="startDate">
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={formData.start_date}
-                  onChange={e => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                />
-              </FormField>
-              <FormField label={FIELD_LABELS.END_DATE} htmlFor="endDate">
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={formData.end_date}
-                  onChange={e => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                />
-              </FormField>
-            </div>
-
             <div className="pt-4">
-              <Button type="submit" className="w-full" disabled={saving}>
-                {saving ? BUTTON_LABELS.CREATING : BUTTON_LABELS.CREATE}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? BUTTON_LABELS.CREATING : BUTTON_LABELS.CREATE}
               </Button>
             </div>
           </CardContent>

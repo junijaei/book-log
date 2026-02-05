@@ -28,7 +28,9 @@ export const BUTTON_LABELS = {
   CREATE: '생성',
   CREATING: '생성 중...',
   ADD_QUOTE: '인용구 추가',
+  ADD: '추가',
   REMOVE: '제거',
+  CLOSE: '닫기',
   BACK_TO_LIST: '목록으로',
   ADD_FIRST_BOOK: '첫 도서 추가하기',
 } as const;
@@ -74,7 +76,11 @@ export const MESSAGES = {
   DELETE_CONFIRMATION_TITLE: '독서 기록 삭제',
   DELETE_CONFIRMATION_MESSAGE: '이 독서 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
   DELETE_BOOK_WARNING: '다른 독서 기록이 없어 도서도 함께 삭제됩니다.',
+  DELETE_NOT_IMPLEMENTED: '삭제 기능은 아직 구현되지 않았습니다',
+  DELETING: '삭제 중...',
   NO_COVER: '표지 없음',
+  NO_QUOTES: '등록된 인용구가 없습니다.',
+  DELETE_QUOTE_CONFIRMATION: '이 인용구를 삭제하시겠습니까?',
   REQUIRED_FIELD: '*',
 } as const;
 
@@ -91,6 +97,22 @@ export const MISC = {
   PAGES_UNIT: 'P.',
   BOOK_DETAILS: '도서 정보',
   READING_LOG: '독서 기록',
+  ADD_NEW_QUOTE: '새 인용구 추가',
+  EDIT_QUOTE: '인용구 수정',
+  DELETE_QUOTE: '인용구 삭제',
+  WILL_BE_ADDED_ON_SAVE: '저장 시 추가됨',
+  DELETE_READING_LOG: '독서 기록 삭제',
+} as const;
+
+// Constants
+export const LOGIN_LABELS = {
+  TITLE: '로그인',
+  DESCRIPTION: '계정에 로그인하여 독서 기록을 관리하세요',
+  EMAIL: '이메일',
+  PASSWORD: '비밀번호',
+  SUBMIT: '로그인',
+  SUBMITTING: '로그인 중...',
+  ERROR_GENERIC: '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.',
 } as const;
 
 // Helper function to get reading status label

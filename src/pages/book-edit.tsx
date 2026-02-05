@@ -1,11 +1,8 @@
-import {
-  createQuote,
-  deleteQuote,
-  deleteReadingLog,
-  getReadingRecord,
-  updateBook,
-  updateReadingLog,
-} from '@/api/mock-api';
+import { useForm } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { deleteReadingRecord, getReadingRecord, upsertReadingRecord } from '@/api';
+import { FormField } from '@/components/form-field';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -17,41 +14,71 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { getReadingStatusLabel } from '@/lib/utils';
-import type { Quote, ReadingRecord, ReadingStatus } from '@/types';
-import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import {
+  BUTTON_LABELS,
+  FIELD_LABELS,
+  getReadingStatusLabel,
+  MESSAGES,
+  MISC,
+  PLACEHOLDERS,
+} from '@/lib/constants';
+import type {
+  BookEditFormData,
+  LocalQuote,
+  NewQuoteFormData,
+  Quote,
+  ReadingRecord,
+  ReadingStatus,
+} from '@/types';
+
+const READING_STATUSES: ReadingStatus[] = ['want_to_read', 'reading', 'finished', 'abandoned'];
 
 export function BookEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // Local state for editing
-  const [bookData, setBookData] = useState({
-    title: '',
-    author: '',
-    cover_image_url: '',
-    total_pages: '',
+  // Main form for book + reading log
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { isSubmitting },
+  } = useForm<BookEditFormData>({
+    defaultValues: {
+      title: '',
+      author: '',
+      cover_image_url: '',
+      total_pages: '',
+      status: 'want_to_read',
+      current_page: '',
+      rating: '',
+      start_date: '',
+      end_date: '',
+      review: '',
+    },
   });
 
-  const [logData, setLogData] = useState({
-    status: 'want_to_read' as ReadingStatus,
-    current_page: '',
-    rating: '',
-    start_date: '',
-    end_date: '',
-    review: '',
+  // Quote management (separate from main form due to dynamic add/remove)
+  const [quotes, setQuotes] = useState<LocalQuote[]>([]);
+  const [deletedQuoteIds, setDeletedQuoteIds] = useState<string[]>([]);
+
+  // New quote form
+  const {
+    register: registerQuote,
+    handleSubmit: handleQuoteSubmit,
+    reset: resetQuote,
+    watch: watchQuote,
+  } = useForm<NewQuoteFormData>({
+    defaultValues: { text: '', page_number: '' },
   });
 
-  const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [newQuoteText, setNewQuoteText] = useState('');
-  const [newQuotePage, setNewQuotePage] = useState('');
+  const newQuoteText = watchQuote('text');
+  const newQuotePage = watchQuote('page_number');
 
   const [originalRecord, setOriginalRecord] = useState<ReadingRecord | null>(null);
 
@@ -68,15 +95,12 @@ export function BookEditPage() {
 
         setOriginalRecord(data);
 
-        // Populate local state
-        setBookData({
+        // Populate form with loaded data
+        reset({
           title: data.book.title,
           author: data.book.author,
           cover_image_url: data.book.cover_image_url || '',
           total_pages: data.book.total_pages?.toString() || '',
-        });
-
-        setLogData({
           status: data.reading_log.status,
           current_page: data.reading_log.current_page?.toString() || '',
           rating: data.reading_log.rating?.toString() || '',
@@ -85,7 +109,14 @@ export function BookEditPage() {
           review: data.reading_log.review || '',
         });
 
-        setQuotes([...data.quotes]);
+        setQuotes(
+          data.quotes.map((q: Quote) => ({
+            id: q.id,
+            text: q.text,
+            page_number: q.page_number,
+            noted_at: q.noted_at,
+          }))
+        );
       } catch (error) {
         console.error('Failed to load record:', error);
       } finally {
@@ -94,87 +125,87 @@ export function BookEditPage() {
     };
 
     loadRecord();
-  }, [id, navigate]);
+  }, [id, navigate, reset]);
 
-  const handleSave = async () => {
+  const onSubmit = async (data: BookEditFormData) => {
     if (!originalRecord || !id) return;
 
-    setSaving(true);
     try {
-      // Update book
-      await updateBook(originalRecord.book.id, {
-        title: bookData.title,
-        author: bookData.author,
-        cover_image_url: bookData.cover_image_url || null,
-        total_pages: bookData.total_pages ? parseInt(bookData.total_pages) : null,
+      await upsertReadingRecord({
+        book: {
+          id: originalRecord.book.id,
+          title: data.title,
+          author: data.author,
+          cover_image_url: data.cover_image_url || null,
+          total_pages: data.total_pages ? parseInt(data.total_pages) : null,
+        },
+        reading_log: {
+          id: id,
+          status: data.status,
+          current_page: data.current_page ? parseInt(data.current_page) : null,
+          rating: data.rating ? parseInt(data.rating) : null,
+          start_date: data.start_date || null,
+          end_date: data.end_date || null,
+          review: data.review || null,
+        },
+        quotes: quotes.map(q => ({
+          id: q.id,
+          text: q.text,
+          page_number: q.page_number,
+          noted_at: q.noted_at,
+        })),
+        delete_quote_ids: deletedQuoteIds.length > 0 ? deletedQuoteIds : undefined,
       });
-
-      // Update reading log
-      await updateReadingLog(id, {
-        status: logData.status,
-        current_page: logData.current_page ? parseInt(logData.current_page) : null,
-        rating: logData.rating ? parseInt(logData.rating) : null,
-        start_date: logData.start_date || null,
-        end_date: logData.end_date || null,
-        review: logData.review || null,
-      });
-
-      // Handle quote changes (simplified: we won't track individual edits, just new ones)
-      // In a real app, you'd track additions/edits/deletions separately
 
       navigate(`/books/${id}`);
     } catch (error) {
       console.error('Failed to save:', error);
-      alert('Failed to save changes');
-    } finally {
-      setSaving(false);
+      alert(MESSAGES.FAILED_TO_SAVE);
     }
   };
 
   const handleDelete = async () => {
     if (!id) return;
 
+    setDeleting(true);
     try {
-      await deleteReadingLog(id);
+      await deleteReadingRecord({ reading_log_id: id });
       navigate('/');
     } catch (error) {
       console.error('Failed to delete:', error);
-      alert('Failed to delete record');
+      alert(MESSAGES.FAILED_TO_DELETE);
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
     }
   };
 
-  const handleAddQuote = async () => {
-    if (!newQuoteText || !newQuotePage || !id) return;
+  const onAddQuote = (data: NewQuoteFormData) => {
+    const newQuote: LocalQuote = {
+      text: data.text,
+      page_number: parseInt(data.page_number),
+      noted_at: new Date().toISOString().split('T')[0],
+      isNew: true,
+    };
 
-    try {
-      const quote = await createQuote({
-        reading_log_id: id,
-        text: newQuoteText,
-        page_number: parseInt(newQuotePage),
-        noted_at: new Date().toISOString().split('T')[0],
-      });
-
-      setQuotes(prev => [...prev, quote]);
-      setNewQuoteText('');
-      setNewQuotePage('');
-    } catch (error) {
-      console.error('Failed to add quote:', error);
-    }
+    setQuotes(prev => [...prev, newQuote]);
+    resetQuote();
   };
 
-  const handleDeleteQuote = async (quoteId: string) => {
-    try {
-      await deleteQuote(quoteId);
-      setQuotes(prev => prev.filter(q => q.id !== quoteId));
-    } catch (error) {
-      console.error('Failed to delete quote:', error);
+  const handleDeleteQuote = (index: number) => {
+    const quote = quotes[index];
+
+    if (quote.id) {
+      setDeletedQuoteIds(prev => [...prev, quote.id!]);
     }
+
+    setQuotes(prev => prev.filter((_, i) => i !== index));
   };
 
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="text-center py-12">불러오는 중입니다...</div>
+        <div className="text-center py-12">{MESSAGES.LOADING}</div>
       </div>
     );
   }
@@ -185,147 +216,108 @@ export function BookEditPage() {
       <div className="flex justify-between items-center mb-6">
         <Link to={`/books/${id}`}>
           <Button variant="outline" size="sm">
-            ← 취소
+            ← {BUTTON_LABELS.CANCEL}
           </Button>
         </Link>
         <div className="flex gap-2">
-          <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-            삭제
+          <Button
+            variant="destructive"
+            onClick={() => setDeleteDialogOpen(true)}
+            disabled={deleting}
+          >
+            {BUTTON_LABELS.DELETE}
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? '저장중입니다...' : '저장하기'}
+          <Button onClick={handleSubmit(onSubmit)} disabled={isSubmitting || deleting}>
+            {isSubmitting ? BUTTON_LABELS.SAVING : BUTTON_LABELS.SAVE}
           </Button>
         </div>
       </div>
 
-      {/* Book Info */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>책 삭세 내용</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="title">제목</Label>
-            <Input
-              id="title"
-              value={bookData.title}
-              onChange={e => setBookData(prev => ({ ...prev, title: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="author">저자</Label>
-            <Input
-              id="author"
-              value={bookData.author}
-              onChange={e => setBookData(prev => ({ ...prev, author: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="cover">커버 이미지 URL</Label>
-            <Input
-              id="cover"
-              value={bookData.cover_image_url}
-              onChange={e => setBookData(prev => ({ ...prev, cover_image_url: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="pages">총 페이지 수</Label>
-            <Input
-              id="pages"
-              type="number"
-              value={bookData.total_pages}
-              onChange={e => setBookData(prev => ({ ...prev, total_pages: e.target.value }))}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        {/* Book Info */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>{MISC.BOOK_DETAILS}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField label={FIELD_LABELS.TITLE} htmlFor="title">
+              <Input id="title" {...register('title')} />
+            </FormField>
 
-      {/* Reading Log */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Reading Log</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="status">진행 상태</Label>
-            <Select
-              id="status"
-              value={logData.status}
-              onChange={e =>
-                setLogData(prev => ({ ...prev, status: e.target.value as ReadingStatus }))
-              }
-            >
-              {(['want_to_read', 'reading', 'finished', 'abandoned'] as const).map(status => (
-                <option value={status}>{getReadingStatusLabel(status)}</option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="currentPage">현재 페이지 수</Label>
-            <Input
-              id="currentPage"
-              type="number"
-              value={logData.current_page}
-              onChange={e => setLogData(prev => ({ ...prev, current_page: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="rating">별점 (1-5)</Label>
-            <Input
-              id="rating"
-              type="number"
-              min="1"
-              max="5"
-              value={logData.rating}
-              onChange={e => setLogData(prev => ({ ...prev, rating: e.target.value }))}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="startDate">독서 시작일</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={logData.start_date}
-                onChange={e => setLogData(prev => ({ ...prev, start_date: e.target.value }))}
-              />
+            <FormField label={FIELD_LABELS.AUTHOR} htmlFor="author">
+              <Input id="author" {...register('author')} />
+            </FormField>
+
+            <FormField label={FIELD_LABELS.COVER_IMAGE_URL} htmlFor="cover_image_url">
+              <Input id="cover_image_url" {...register('cover_image_url')} />
+            </FormField>
+
+            <FormField label={FIELD_LABELS.TOTAL_PAGES} htmlFor="total_pages">
+              <Input id="total_pages" type="number" {...register('total_pages')} />
+            </FormField>
+          </CardContent>
+        </Card>
+
+        {/* Reading Log */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>{MISC.READING_LOG}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField label={FIELD_LABELS.STATUS} htmlFor="status">
+              <Select id="status" {...register('status')}>
+                {READING_STATUSES.map(status => (
+                  <option key={status} value={status}>
+                    {getReadingStatusLabel(status)}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
+
+            <FormField label={FIELD_LABELS.CURRENT_PAGE} htmlFor="current_page">
+              <Input id="current_page" type="number" {...register('current_page')} />
+            </FormField>
+
+            <FormField label={FIELD_LABELS.RATING} htmlFor="rating">
+              <Input id="rating" type="number" min="1" max="5" {...register('rating')} />
+            </FormField>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label={FIELD_LABELS.START_DATE} htmlFor="start_date">
+                <Input id="start_date" type="date" {...register('start_date')} />
+              </FormField>
+
+              <FormField label={FIELD_LABELS.END_DATE} htmlFor="end_date">
+                <Input id="end_date" type="date" {...register('end_date')} />
+              </FormField>
             </div>
-            <div>
-              <Label htmlFor="endDate">독서 종료일</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={logData.end_date}
-                onChange={e => setLogData(prev => ({ ...prev, end_date: e.target.value }))}
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="review">감상문</Label>
-            <Textarea
-              id="review"
-              value={logData.review}
-              onChange={e => setLogData(prev => ({ ...prev, review: e.target.value }))}
-              rows={6}
-            />
-          </div>
-        </CardContent>
-      </Card>
+
+            <FormField label={FIELD_LABELS.REVIEW} htmlFor="review">
+              <Textarea id="review" {...register('review')} rows={6} />
+            </FormField>
+          </CardContent>
+        </Card>
+      </form>
 
       {/* Quotes */}
       <Card>
         <CardHeader>
-          <CardTitle>인용구</CardTitle>
+          <CardTitle>{FIELD_LABELS.QUOTES}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Existing quotes */}
-          {quotes.map(quote => (
-            <div key={quote.id} className="border rounded p-4 space-y-2">
+          {quotes.map((quote, index) => (
+            <div key={quote.id ?? `new-${index}`} className="border rounded p-4 space-y-2">
               <p className="text-foreground">"{quote.text}"</p>
               <div className="flex justify-between items-center text-xs text-muted-foreground">
-                <span>페이지 {quote.page_number}</span>
-                <Button variant="ghost" size="sm" onClick={() => handleDeleteQuote(quote.id)}>
-                  삭제
+                <span>
+                  {FIELD_LABELS.PAGE_NUMBER} {quote.page_number}
+                  {quote.isNew && (
+                    <span className="ml-2 text-blue-500">({MISC.WILL_BE_ADDED_ON_SAVE})</span>
+                  )}
+                </span>
+                <Button variant="ghost" size="sm" onClick={() => handleDeleteQuote(index)}>
+                  {BUTTON_LABELS.DELETE}
                 </Button>
               </div>
             </div>
@@ -333,23 +325,27 @@ export function BookEditPage() {
 
           {/* Add new quote */}
           <div className="border-t pt-4 space-y-2">
-            <Label>새 인용구 추가하기</Label>
-            <Textarea
-              placeholder="Quote text..."
-              value={newQuoteText}
-              onChange={e => setNewQuoteText(e.target.value)}
-              rows={3}
-            />
+            <FormField label={MISC.ADD_NEW_QUOTE} htmlFor="new_quote_text">
+              <Textarea
+                id="new_quote_text"
+                placeholder={PLACEHOLDERS.QUOTE_TEXT}
+                {...registerQuote('text')}
+                rows={3}
+              />
+            </FormField>
             <div className="flex gap-2">
               <Input
                 type="number"
-                placeholder="Page number"
-                value={newQuotePage}
-                onChange={e => setNewQuotePage(e.target.value)}
+                placeholder={PLACEHOLDERS.PAGE_NUMBER}
+                {...registerQuote('page_number')}
                 className="w-32"
               />
-              <Button onClick={handleAddQuote} disabled={!newQuoteText || !newQuotePage}>
-                저장하기
+              <Button
+                type="button"
+                onClick={handleQuoteSubmit(onAddQuote)}
+                disabled={!newQuoteText || !newQuotePage}
+              >
+                {BUTTON_LABELS.ADD}
               </Button>
             </div>
           </div>
@@ -360,22 +356,19 @@ export function BookEditPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>독서 기록 삭제하기</DialogTitle>
-            <DialogDescription>
-              정말로 삭제하시겠습니까? 이 선택은 되돌릴 수 없습니다.
-              {originalRecord && !originalRecord.book && (
-                <span className="block mt-2 font-medium">
-                  다른 독서 기록이 없다면 책 정보도 삭제됩니다.
-                </span>
-              )}
-            </DialogDescription>
+            <DialogTitle>{MESSAGES.DELETE_CONFIRMATION_TITLE}</DialogTitle>
+            <DialogDescription>{MESSAGES.DELETE_CONFIRMATION_MESSAGE}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              취소하기
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleting}
+            >
+              {BUTTON_LABELS.CANCEL}
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              삭제하기
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? MESSAGES.DELETING : BUTTON_LABELS.DELETE}
             </Button>
           </DialogFooter>
         </DialogContent>

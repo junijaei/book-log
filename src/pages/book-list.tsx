@@ -1,25 +1,25 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { getReadingRecords } from '@/api';
 import { BookCard } from '@/components/book-card';
 import { PageHeader } from '@/components/page-header';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { getReadingRecords } from '@/api/mock-api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  BUTTON_LABELS,
+  FILTER_LABELS,
+  getReadingStatusLabel,
+  MESSAGES,
+  PAGE_TITLES,
+  PLACEHOLDERS,
+} from '@/lib/constants';
 import type {
   ReadingRecord,
   ReadingRecordFilters,
   ReadingRecordSort,
   ReadingStatus,
 } from '@/types';
-import {
-  PAGE_TITLES,
-  BUTTON_LABELS,
-  PLACEHOLDERS,
-  MESSAGES,
-  FILTER_LABELS,
-  getReadingStatusLabel,
-} from '@/lib/constants';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export function BookListPage() {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
@@ -53,7 +53,7 @@ export function BookListPage() {
     } finally {
       setLoading(false);
     }
-  }, [cursor, filters, sort, loading, hasMore]);
+  }, [cursor, filters, sort]);
 
   // Reset and reload when filters/sort change
   useEffect(() => {
@@ -69,7 +69,6 @@ export function BookListPage() {
     }
   }, [cursor, hasMore, loadMore]);
 
-  // Infinite scroll observer
   useEffect(() => {
     const target = observerTarget.current;
     if (!target) return;
@@ -85,7 +84,7 @@ export function BookListPage() {
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [hasMore, loading, loadMore]);
+  }, [hasMore, loadMore]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters(prev => ({ ...prev, search: e.target.value || undefined }));

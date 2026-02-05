@@ -7,15 +7,17 @@ interface FormFieldProps {
   required?: boolean;
   children: ReactNode;
   htmlFor?: string;
+  error?: string;
 }
 
-export function FormField({ label, required = false, children, htmlFor }: FormFieldProps) {
+export function FormField({ label, required = false, children, htmlFor, error }: FormFieldProps) {
   return (
-    <div>
+    <div className="space-y-1">
       <Label htmlFor={htmlFor}>
         {label} {required && <span className="text-destructive">{MESSAGES.REQUIRED_FIELD}</span>}
       </Label>
       {children}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }
