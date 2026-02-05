@@ -7,6 +7,8 @@ import { BookListPage } from './pages/book-list';
 import { BookDetailPage } from './pages/book-detail';
 import { BookEditPage } from './pages/book-edit';
 import { BookNewPage } from './pages/book-new';
+import { NotFoundPage } from './pages/not-found';
+import { ErrorPage } from './pages/error';
 
 function App() {
   return (
@@ -50,6 +52,9 @@ function App() {
                 </AuthGuard>
               }
             />
+
+            <Route path="/error" element={<ErrorPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
