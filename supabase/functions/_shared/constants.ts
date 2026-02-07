@@ -35,3 +35,6 @@ export { UPDATABLE_PROFILE_FIELDS };
 
 const FORBIDDEN_PROFILE_FIELDS = ['id', 'created_at', 'updated_at'] as const;
 export { FORBIDDEN_PROFILE_FIELDS };
+
+export const PROFILE_SEARCH_DEFAULT_LIMIT = 20;
+export const PROFILE_SEARCH_MIN_LENGTH = 2;

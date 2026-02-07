@@ -5,10 +5,16 @@ import {
   NICKNAME_MAX_LENGTH,
   UPDATABLE_PROFILE_FIELDS,
   FORBIDDEN_PROFILE_FIELDS,
+  PROFILE_SEARCH_DEFAULT_LIMIT,
+  PROFILE_SEARCH_MIN_LENGTH,
   authenticateRequest,
   corsResponse,
   errorResponse,
   successResponse,
+  isValidUUID,
+  escapeSearchTerm,
+  sanitizePagination,
+  getBlockedUserIds,
 } from '../_shared/index.ts';
 import type { UpdateProfilePayload } from '../_shared/index.ts';
 
@@ -34,6 +40,108 @@ async function handleGet(supabase: SupabaseClient, userId: string): Promise<Resp
   if (!data) return errorResponse('Profile not found', 404);
 
   return successResponse(data);
+}
+
+// =============================================================================
+// GET /profiles?user_id= — Public profile
+// =============================================================================
+
+async function handleGetPublicProfile(
+  supabase: SupabaseClient,
+  userId: string,
+  targetUserId: string
+): Promise<Response> {
+  if (!isValidUUID(targetUserId)) {
+    return errorResponse('Invalid user_id format. Must be a valid UUID');
+  }
+
+  if (targetUserId === userId) {
+    return await handleGet(supabase, userId);
+  }
+
+  const blockedIds = await getBlockedUserIds(supabase, userId);
+  if (blockedIds.includes(targetUserId)) {
+    return errorResponse('User not found', 404);
+  }
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, nickname, avatar_url, bio')
+    .eq('id', targetUserId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Get public profile error:', error);
+    return errorResponse('Failed to fetch profile', 500);
+  }
+
+  if (!data) return errorResponse('User not found', 404);
+
+  return successResponse(data);
+}
+
+// =============================================================================
+// GET /profiles?search= — User search
+// =============================================================================
+
+async function handleSearch(
+  supabase: SupabaseClient,
+  userId: string,
+  searchParams: URLSearchParams
+): Promise<Response> {
+  const searchTerm = searchParams.get('search')?.trim() ?? '';
+
+  if (searchTerm === '') {
+    return errorResponse('Search term cannot be empty');
+  }
+
+  if (searchTerm.length < PROFILE_SEARCH_MIN_LENGTH) {
+    return errorResponse(`search term must be at least ${PROFILE_SEARCH_MIN_LENGTH} characters`);
+  }
+
+  const limitParam = searchParams.get('limit');
+  const offsetParam = searchParams.get('offset');
+  const { limit, offset } = sanitizePagination(
+    limitParam !== null ? Number(limitParam) : undefined,
+    offsetParam !== null ? Number(offsetParam) : undefined,
+    PROFILE_SEARCH_DEFAULT_LIMIT
+  );
+
+  const blockedIds = await getBlockedUserIds(supabase, userId);
+
+  const escapedSearch = escapeSearchTerm(searchTerm);
+  const searchPattern = `%${escapedSearch}%`;
+
+  let query = supabase
+    .from('profiles')
+    .select('id, nickname, avatar_url, bio', { count: 'exact' })
+    .ilike('nickname', searchPattern)
+    .neq('id', userId)
+    .order('nickname', { ascending: true });
+
+  for (const blockedId of blockedIds) {
+    query = query.neq('id', blockedId);
+  }
+
+  query = query.range(offset, offset + limit - 1);
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    console.error('Search profiles error:', error);
+    return errorResponse('Failed to search users', 500);
+  }
+
+  if (!data || data.length === 0) {
+    return successResponse([], { limit, offset, count: 0, total: count ?? 0 });
+  }
+
+  return successResponse(data, {
+    limit,
+    offset,
+    count: data.length,
+    total: count ?? data.length,
+  });
 }
 
 // =============================================================================
@@ -122,9 +230,21 @@ serve(async (req) => {
     if (authResult instanceof Response) return authResult;
     const { supabase, userId } = authResult;
 
+    const url = new URL(req.url);
+
     switch (req.method) {
-      case 'GET':
+      case 'GET': {
+        const targetUserId = url.searchParams.get('user_id');
+        const searchTerm = url.searchParams.get('search');
+
+        if (targetUserId) {
+          return await handleGetPublicProfile(supabase, userId, targetUserId);
+        }
+        if (searchTerm !== null) {
+          return await handleSearch(supabase, userId, url.searchParams);
+        }
         return await handleGet(supabase, userId);
+      }
 
       case 'PUT': {
         let body: Record<string, unknown>;
