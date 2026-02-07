@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/lib/auth/auth-provider';
+import { useAuth } from '@/hooks/use-auth';
 import { LOGIN_LABELS } from '@/lib/constants';
 import { useState, type SubmitEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';

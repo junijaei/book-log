@@ -4,7 +4,7 @@
  * Protects routes from unauthorized access.
  */
 
-import { useAuth } from '@/lib/auth/auth-provider';
+import { useAuth } from '@/hooks/use-auth';
 import { MESSAGES } from '@/lib/constants';
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
