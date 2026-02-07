@@ -13,7 +13,6 @@ import { queryKeys } from '@/lib/query-keys';
 import type {
   CreateBookInput,
   CreateQuoteInput,
-  DeleteQuoteInput,
   DeleteReadingRecordInput,
   ReadingRecordFilters,
   ReadingRecordSort,
@@ -28,11 +27,14 @@ export function useReadingRecords(filters?: ReadingRecordFilters, sort?: Reading
     queryKey: queryKeys.readingRecords.list(filters, sort),
     queryFn: ({ pageParam }) =>
       getReadingRecords(filters, sort, {
-        cursor: pageParam,
+        offset: pageParam,
         limit: DEFAULT_PAGE_SIZE,
       }),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: lastPage => (lastPage.has_more ? lastPage.next_cursor : undefined),
+    initialPageParam: 0,
+    getNextPageParam: lastPage => {
+      const nextOffset = lastPage.meta.offset + lastPage.meta.count;
+      return nextOffset < lastPage.meta.total ? nextOffset : undefined;
+    },
   });
 }
 
@@ -132,7 +134,7 @@ export function useDeleteQuote(readingLogId: string) {
   const invalidateRecords = useInvalidateReadingRecords();
 
   return useMutation({
-    mutationFn: (input: DeleteQuoteInput) => deleteQuote(input),
+    mutationFn: (quoteId: string) => deleteQuote(quoteId),
     onSuccess: () => {
       invalidateRecords();
       queryClient.invalidateQueries({

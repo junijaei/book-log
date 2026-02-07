@@ -7,6 +7,12 @@
 /** Reading status enum values */
 export type ReadingStatus = 'want_to_read' | 'reading' | 'finished' | 'abandoned';
 
+/** Visibility level for reading logs */
+export type Visibility = 'public' | 'friends' | 'private';
+
+/** Feed scope for listing reading records */
+export type FeedScope = 'me' | 'friends' | 'all';
+
 /** Book entity */
 export interface Book {
   id: string;
@@ -28,9 +34,17 @@ export interface ReadingLog {
   start_date: string | null;
   end_date: string | null;
   review: string | null;
+  visibility: Visibility;
   notion_page_id: string | null;
   created_at: string;
   updated_at: string;
+  user_id: string;
+}
+
+/** User profile summary */
+export interface UserProfile {
+  nickname: string;
+  avatar_url: string | null;
 }
 
 /** Quote entity */
@@ -43,9 +57,10 @@ export interface Quote {
   created_at: string;
 }
 
-/** Composite reading record (book + log + quotes) */
+/** Composite reading record (book + log + quotes + profile) */
 export interface ReadingRecord {
   book: Book;
   reading_log: ReadingLog;
   quotes: Quote[];
+  profile: UserProfile | null;
 }

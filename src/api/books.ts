@@ -1,25 +1,21 @@
 /**
  * Books API
  *
- * API functions for book operations.
+ * API functions for book creation.
+ * Endpoint: POST /functions/v1/reading-records
  */
 
 import type { CreateBookInput, CreateBookResponse } from '@/types';
 import { invokeEdgeFunction } from './edge-functions';
 import { ApiError } from './errors';
 
-/**
- * Creates a new book with an empty reading log.
- *
- * @param input - Book creation data
- * @returns The created book ID and reading log ID
- */
 export async function createBook(input: CreateBookInput): Promise<CreateBookResponse> {
   try {
-    return await invokeEdgeFunction<CreateBookResponse>('create-book', {
+    const response = await invokeEdgeFunction<{ data: CreateBookResponse }>('reading-records', {
       method: 'POST',
       body: input,
     });
+    return response.data;
   } catch (error) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(error instanceof Error ? error.message : 'Failed to create book');

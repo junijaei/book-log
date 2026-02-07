@@ -4,7 +4,7 @@
  * Request/response types for API operations.
  */
 
-import type { Book, Quote, ReadingLog, ReadingStatus } from './entities';
+import type { Book, ReadingLog, ReadingStatus } from './entities';
 
 // =============================================================================
 // Book API Types
@@ -18,7 +18,7 @@ export interface CreateBookInput {
   total_pages?: number | null;
 }
 
-/** Response from create-book API (book created with empty reading log) */
+/** Response from POST /reading-records (book created with empty reading log) */
 export interface CreateBookResponse {
   book: Book;
   reading_log: ReadingLog;
@@ -69,21 +69,22 @@ export interface UpdateQuoteInput {
   noted_at?: string | null;
 }
 
-/** Input for deleting a quote */
-export interface DeleteQuoteInput {
-  id: string;
-}
-
-/** Input for deleting a reading record */
+/** Input for deleting a reading record (ID passed as query param) */
 export interface DeleteReadingRecordInput {
   reading_log_id: string;
 }
 
-/** Response from delete-reading-record API */
+/** Response from DELETE /reading-records */
 export interface DeleteReadingRecordResponse {
-  deleted_reading_log_id: string;
-  deleted_book_id: string | null;
-  deleted_quote_count: number;
+  deleted: true;
+  reading_log_id: string;
+  book_id: string | null;
+}
+
+/** Response from DELETE /quotes */
+export interface DeleteQuoteResponse {
+  deleted: true;
+  quote_id: string;
 }
 
 // =============================================================================
@@ -98,7 +99,7 @@ export interface UpsertQuoteData {
   noted_at?: string | null;
 }
 
-/** Payload for upsert-reading-records API */
+/** Payload for PUT /reading-records */
 export interface UpsertPayload {
   /** Book data - include id to update existing */
   book: CreateBookInput & { id?: string };
@@ -118,11 +119,10 @@ export interface UpsertPayload {
   delete_quote_ids?: string[];
 }
 
-/** Response from upsert-reading-records API */
+/** Response from PUT /reading-records */
 export interface UpsertReadingRecordResponse {
   book_id: string;
   reading_log_id: string;
-  quotes: Quote[];
 }
 
 // =============================================================================

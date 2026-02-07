@@ -99,7 +99,7 @@ export function BookDetailPage() {
     if (!quoteToDelete) return;
 
     try {
-      await deleteQuoteMutation.mutateAsync({ id: quoteToDelete.id });
+      await deleteQuoteMutation.mutateAsync(quoteToDelete.id);
 
       setDeleteQuoteDialogOpen(false);
       setQuoteToDelete(null);

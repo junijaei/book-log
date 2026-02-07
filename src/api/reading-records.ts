@@ -2,6 +2,7 @@
  * Reading Records API
  *
  * API functions for reading record operations via Edge Functions.
+ * Endpoint: /functions/v1/reading-records
  */
 
 import type {
@@ -18,74 +19,78 @@ import type {
 import { invokeEdgeFunction } from './edge-functions';
 import { ApiError } from './errors';
 
-/**
- * Fetches reading records with optional filtering, sorting, and pagination.
- */
+const ENDPOINT = 'reading-records';
+
+function buildListQuery(
+  filters?: ReadingRecordFilters,
+  sort?: ReadingRecordSort,
+  pagination?: PaginationParams
+): Record<string, string> {
+  const query: Record<string, string> = {};
+
+  if (filters?.scope) query.scope = filters.scope;
+  if (filters?.status?.length) query.status = filters.status.join(',');
+  if (filters?.start_date_from) query.start_date_from = filters.start_date_from;
+  if (filters?.start_date_to) query.start_date_to = filters.start_date_to;
+  if (filters?.end_date_from) query.end_date_from = filters.end_date_from;
+  if (filters?.end_date_to) query.end_date_to = filters.end_date_to;
+  if (filters?.search) query.search = filters.search;
+
+  if (sort?.field) query.sort = sort.field;
+  if (sort?.direction) query.direction = sort.direction;
+
+  if (pagination?.limit != null) query.limit = pagination.limit.toString();
+  if (pagination?.offset != null) query.offset = pagination.offset.toString();
+
+  return query;
+}
+
 export async function getReadingRecords(
   filters?: ReadingRecordFilters,
   sort?: ReadingRecordSort,
   pagination?: PaginationParams
 ): Promise<PaginatedResponse<ReadingRecord>> {
-  const body: Record<string, unknown> = {};
+  const query = buildListQuery(filters, sort, pagination);
 
-  if (filters) body.filters = filters;
-  if (sort) body.sort = sort;
-  if (pagination) body.pagination = pagination;
-
-  return await invokeEdgeFunction<PaginatedResponse<ReadingRecord>>('get-reading-records', {
-    body: Object.keys(body).length > 0 ? body : undefined,
+  return await invokeEdgeFunction<PaginatedResponse<ReadingRecord>>(ENDPOINT, {
+    method: 'GET',
+    query: Object.keys(query).length > 0 ? query : undefined,
   });
 }
 
-/**
- * Fetches a single reading record by reading log ID.
- */
 export async function getReadingRecord(id: string): Promise<ReadingRecord | null> {
-  const response = await invokeEdgeFunction<{data: ReadingRecord}>(
-    'get-reading-record',
-    {
-      body: {
-        filters: { reading_log_id: id },
-        pagination: { limit: 1 },
-      },
-    }
-  );
+  const response = await invokeEdgeFunction<{ data: ReadingRecord }>(ENDPOINT, {
+    method: 'GET',
+    query: { id },
+  });
 
-  return response.data ? response.data : null;
+  return response.data ?? null;
 }
 
-/**
- * Creates or updates a reading record (book + reading log + quotes).
- */
 export async function upsertReadingRecord(
   payload: UpsertPayload
 ): Promise<UpsertReadingRecordResponse> {
   try {
-    return await invokeEdgeFunction<UpsertReadingRecordResponse>('upsert-reading-records', {
-      method: 'POST',
+    const response = await invokeEdgeFunction<{ data: UpsertReadingRecordResponse }>(ENDPOINT, {
+      method: 'PUT',
       body: payload,
     });
+    return response.data;
   } catch (error) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(error instanceof Error ? error.message : 'Failed to upsert reading record');
   }
 }
 
-/**
- * Deletes a reading record and associated data.
- *
- * @param input - Deletion input containing reading_log_id
- * @returns Details of what was deleted
- * @throws {ApiError} If the request fails
- */
 export async function deleteReadingRecord(
   input: DeleteReadingRecordInput
 ): Promise<DeleteReadingRecordResponse> {
   try {
-    return await invokeEdgeFunction<DeleteReadingRecordResponse>('delete-reading-record', {
-      method: 'POST',
-      body: input,
+    const response = await invokeEdgeFunction<{ data: DeleteReadingRecordResponse }>(ENDPOINT, {
+      method: 'DELETE',
+      query: { id: input.reading_log_id },
     });
+    return response.data;
   } catch (error) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(error instanceof Error ? error.message : 'Failed to delete reading record');

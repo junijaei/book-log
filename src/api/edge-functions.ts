@@ -27,12 +27,19 @@ export async function invokeEdgeFunction<TResponse>(
   options: {
     method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     body?: unknown;
+    query?: Record<string, string>;
     headers?: Record<string, string>;
   } = {}
 ): Promise<TResponse> {
-  const { method = 'POST', body, headers = {} } = options;
+  const { method = 'POST', body, query, headers = {} } = options;
 
-  const { data, error } = await supabase.functions.invoke<TResponse>(functionName, {
+  let target = functionName;
+  if (query) {
+    const params = new URLSearchParams(query);
+    target = `${functionName}?${params.toString()}`;
+  }
+
+  const { data, error } = await supabase.functions.invoke<TResponse>(target, {
     method,
     body: body as Record<string, unknown> | undefined,
     headers,

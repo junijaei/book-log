@@ -5,7 +5,16 @@
  */
 
 // Entity types
-export type { ReadingStatus, Book, ReadingLog, Quote, ReadingRecord } from './entities';
+export type {
+  ReadingStatus,
+  Visibility,
+  FeedScope,
+  Book,
+  ReadingLog,
+  UserProfile,
+  Quote,
+  ReadingRecord,
+} from './entities';
 
 // API types
 export type {
@@ -15,9 +24,9 @@ export type {
   UpdateReadingLogInput,
   CreateQuoteInput,
   UpdateQuoteInput,
-  DeleteQuoteInput,
   DeleteReadingRecordInput,
   DeleteReadingRecordResponse,
+  DeleteQuoteResponse,
   UpsertQuoteData,
   UpsertPayload,
   UpsertReadingRecordResponse,
@@ -30,6 +39,7 @@ export type {
   ReadingRecordSortField,
   ReadingRecordSort,
   PaginationParams,
+  PaginationMeta,
   PaginatedResponse,
 } from './filters';
 

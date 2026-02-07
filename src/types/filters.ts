@@ -4,7 +4,7 @@
  * Types for list operations with filtering, sorting, and pagination.
  */
 
-import type { ReadingStatus } from './entities';
+import type { FeedScope, ReadingStatus } from './entities';
 
 /** Filter options for reading records list */
 export interface ReadingRecordFilters {
@@ -20,8 +20,8 @@ export interface ReadingRecordFilters {
   end_date_to?: string;
   /** Search by title/author */
   search?: string;
-  /** Filter by specific reading log ID */
-  reading_log_id?: string;
+  /** Visibility scope */
+  scope?: FeedScope;
 }
 
 /** Available sort fields */
@@ -33,15 +33,23 @@ export interface ReadingRecordSort {
   direction: 'asc' | 'desc';
 }
 
-/** Pagination parameters */
+/** Pagination parameters (offset-based) */
 export interface PaginationParams {
-  cursor?: string;
   limit?: number;
+  offset?: number;
+}
+
+/** Pagination metadata */
+export interface PaginationMeta {
+  limit: number;
+  offset: number;
+  count: number;
+  total: number;
+  scope?: FeedScope;
 }
 
 /** Paginated response wrapper */
 export interface PaginatedResponse<T> {
   data: T[];
-  next_cursor: string | null;
-  has_more: boolean;
+  meta: PaginationMeta;
 }
