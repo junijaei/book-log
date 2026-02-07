@@ -15,6 +15,12 @@ export type {
   Profile,
   Quote,
   ReadingRecord,
+  FriendshipStatus,
+  FriendAction,
+  ProfileInfo,
+  FriendListItem,
+  ReceivedRequestItem,
+  SentRequestItem,
 } from './entities';
 
 // API types
@@ -32,6 +38,14 @@ export type {
   UpsertPayload,
   UpsertReadingRecordResponse,
   UpdateProfilePayload,
+  FriendRequestBody,
+  FriendRequestResponse,
+  FriendAutoAcceptResponse,
+  FriendAcceptResponse,
+  FriendRejectResponse,
+  FriendDeleteResponse,
+  FriendBlockResponse,
+  FriendUnblockResponse,
   EdgeFunctionErrorResponse,
 } from './api';
 

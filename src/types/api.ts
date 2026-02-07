@@ -4,7 +4,7 @@
  * Request/response types for API operations.
  */
 
-import type { Book, ReadingLog, ReadingStatus } from './entities';
+import type { Book, FriendAction, ReadingLog, ReadingStatus } from './entities';
 
 // =============================================================================
 // Book API Types
@@ -123,6 +123,60 @@ export interface UpsertPayload {
 export interface UpsertReadingRecordResponse {
   book_id: string;
   reading_log_id: string;
+}
+
+// =============================================================================
+// Friends API Types
+// =============================================================================
+
+export interface FriendRequestBody {
+  action: FriendAction;
+  target_user_id?: string;
+  friendship_id?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface FriendRequestResponse {
+  id: string;
+  status: 'pending';
+  created_at: string;
+  addressee: { id: string; nickname: string; avatar_url: string | null };
+}
+
+export interface FriendAutoAcceptResponse {
+  id: string;
+  status: 'accepted';
+  message: string;
+  friend: { id: string; nickname: string; avatar_url: string | null };
+}
+
+export interface FriendAcceptResponse {
+  id: string;
+  status: 'accepted';
+  friend: { id: string; nickname: string; avatar_url: string | null; bio: string | null };
+}
+
+export interface FriendRejectResponse {
+  id: string;
+  status: 'rejected';
+}
+
+export interface FriendDeleteResponse {
+  id: string;
+  deleted: true;
+}
+
+export interface FriendBlockResponse {
+  id: string;
+  status: 'blocked';
+  created_at: string;
+  message: string;
+}
+
+export interface FriendUnblockResponse {
+  id: string;
+  unblocked: true;
 }
 
 // =============================================================================

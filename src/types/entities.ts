@@ -74,3 +74,41 @@ export interface ReadingRecord {
   quotes: Quote[];
   profile: UserProfile | null;
 }
+
+export type FriendshipStatus = 'pending' | 'accepted' | 'rejected' | 'blocked';
+
+export type FriendAction =
+  | 'request'
+  | 'accept'
+  | 'reject'
+  | 'delete'
+  | 'block'
+  | 'unblock'
+  | 'list'
+  | 'received'
+  | 'sent';
+
+export interface ProfileInfo {
+  id: string;
+  nickname: string;
+  avatar_url: string | null;
+  bio: string | null;
+}
+
+export interface FriendListItem {
+  friendship_id: string;
+  friend: ProfileInfo;
+  since: string;
+}
+
+export interface ReceivedRequestItem {
+  friendship_id: string;
+  requester: ProfileInfo;
+  requested_at: string;
+}
+
+export interface SentRequestItem {
+  friendship_id: string;
+  addressee: ProfileInfo;
+  requested_at: string;
+}

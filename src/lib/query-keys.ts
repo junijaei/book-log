@@ -19,4 +19,10 @@ export const queryKeys = {
   profile: {
     all: ['profile'] as const,
   },
+  friends: {
+    all: ['friends'] as const,
+    list: () => [...queryKeys.friends.all, 'list'] as const,
+    received: () => [...queryKeys.friends.all, 'received'] as const,
+    sent: () => [...queryKeys.friends.all, 'sent'] as const,
+  },
 } as const;

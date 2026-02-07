@@ -31,6 +31,19 @@ export { createQuote, updateQuote, deleteQuote } from './quotes';
 // Profiles
 export { getProfile, updateProfile } from './profiles';
 
+// Friends
+export {
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  deleteFriendship,
+  blockUser,
+  unblockUser,
+  listFriends,
+  listReceivedRequests,
+  listSentRequests,
+} from './friends';
+
 // Errors
 export { ApiError } from './errors';
 
