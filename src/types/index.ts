@@ -12,6 +12,7 @@ export type {
   Book,
   ReadingLog,
   UserProfile,
+  Profile,
   Quote,
   ReadingRecord,
 } from './entities';
@@ -30,6 +31,7 @@ export type {
   UpsertQuoteData,
   UpsertPayload,
   UpsertReadingRecordResponse,
+  UpdateProfilePayload,
   EdgeFunctionErrorResponse,
 } from './api';
 

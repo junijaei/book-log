@@ -16,4 +16,7 @@ export const queryKeys = {
     all: ['quotes'] as const,
     byReadingLog: (readingLogId: string) => [...queryKeys.quotes.all, readingLogId] as const,
   },
+  profile: {
+    all: ['profile'] as const,
+  },
 } as const;

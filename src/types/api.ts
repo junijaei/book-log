@@ -126,6 +126,17 @@ export interface UpsertReadingRecordResponse {
 }
 
 // =============================================================================
+// Profile API Types
+// =============================================================================
+
+/** Payload for PUT /profiles — partial update */
+export interface UpdateProfilePayload {
+  nickname?: string;
+  avatar_url?: string | null;
+  bio?: string | null;
+}
+
+// =============================================================================
 // Error Types
 // =============================================================================
 

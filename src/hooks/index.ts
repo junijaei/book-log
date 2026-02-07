@@ -8,3 +8,5 @@ export {
   useUpdateQuote,
   useDeleteQuote,
 } from './use-reading-records';
+
+export { useProfile, useUpdateProfile } from './use-profile';

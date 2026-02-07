@@ -41,10 +41,20 @@ export interface ReadingLog {
   user_id: string;
 }
 
-/** User profile summary */
+/** User profile summary (embedded in ReadingRecord) */
 export interface UserProfile {
   nickname: string;
   avatar_url: string | null;
+}
+
+/** Full user profile entity */
+export interface Profile {
+  id: string;
+  nickname: string;
+  avatar_url: string | null;
+  bio: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 /** Quote entity */

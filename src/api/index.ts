@@ -28,6 +28,9 @@ export {
 // Quotes
 export { createQuote, updateQuote, deleteQuote } from './quotes';
 
+// Profiles
+export { getProfile, updateProfile } from './profiles';
+
 // Errors
 export { ApiError } from './errors';
 
