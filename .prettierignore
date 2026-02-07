@@ -1,0 +1,5 @@
+node_modules
+supabase/.temp
+supabase/.branches
+pnpm-lock.yaml
+*.min.js
