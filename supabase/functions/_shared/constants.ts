@@ -22,3 +22,16 @@ export const VALID_SCOPES = ['me', 'friends', 'all'] as const;
 
 export const MAX_LIMIT = 100;
 export const DEFAULT_LIMIT = 50;
+
+// =============================================================================
+// Profile Constants
+// =============================================================================
+
+export const NICKNAME_MIN_LENGTH = 2;
+export const NICKNAME_MAX_LENGTH = 20;
+
+const UPDATABLE_PROFILE_FIELDS = ['nickname', 'avatar_url', 'bio'] as const;
+export { UPDATABLE_PROFILE_FIELDS };
+
+const FORBIDDEN_PROFILE_FIELDS = ['id', 'created_at', 'updated_at'] as const;
+export { FORBIDDEN_PROFILE_FIELDS };

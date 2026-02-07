@@ -60,6 +60,21 @@ export interface ReadingRecordSort {
   direction: SortDirection;
 }
 
+export interface Profile {
+  id: string;
+  nickname: string;
+  avatar_url: string | null;
+  bio: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UpdateProfilePayload {
+  nickname?: string;
+  avatar_url?: string | null;
+  bio?: string | null;
+}
+
 export interface ValidationResult {
   valid: boolean;
   error?: string;
