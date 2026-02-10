@@ -46,6 +46,14 @@ export function MyBooksPage() {
     direction: 'desc',
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: searchTerm || undefined }));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useReadingRecords(
     filters,
@@ -72,10 +80,6 @@ export function MyBooksPage() {
     observer.observe(target);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters(prev => ({ ...prev, search: e.target.value || undefined }));
-  };
 
   const handleStatusChange = (value: string) => {
     const status = value as ReadingStatus | 'all';
@@ -118,8 +122,8 @@ export function MyBooksPage() {
               <Input
                 type="search"
                 placeholder={PLACEHOLDERS.SEARCH}
-                value={filters.search || ''}
-                onChange={handleSearchChange}
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="text-sm"
               />
               <div className="flex gap-2">
@@ -171,7 +175,7 @@ export function MyBooksPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in-0 duration-300">
               {records.map(record => (
                 <BookCard key={record.reading_log.id} record={record} />
               ))}

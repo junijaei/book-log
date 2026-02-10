@@ -15,6 +15,7 @@ import {
 import type { BookFormData } from '@/types';
 import { Controller, useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export function BookNewPage() {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ export function BookNewPage() {
       navigate(`/books/${response.reading_log.id}`);
     } catch (error) {
       console.error('Failed to create book:', error);
-      alert(MESSAGES.FAILED_TO_CREATE);
+      toast.error(MESSAGES.FAILED_TO_CREATE);
     }
   };
 

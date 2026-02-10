@@ -42,7 +42,7 @@ export function BookCard({ record, showAuthor }: BookCardProps) {
                 <div className="py-3">
                   <div className="w-full bg-secondary rounded-full h-2">
                     <div
-                      className="bg-primary h-2 rounded-full transition-all"
+                      className="bg-primary h-2 rounded-full transition-all duration-700 ease-out"
                       style={{ width: `${progress}%` }}
                     />
                   </div>

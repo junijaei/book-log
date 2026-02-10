@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './components/app-layout';
 import { AuthGuard } from './components/auth-guard';
+import { Toaster } from './components/ui/sonner';
 import { AuthProvider } from './lib/auth/auth-provider';
 import { ThemeProvider } from './lib/theme-provider';
 import { BookDetailPage } from './pages/book-detail';
@@ -81,6 +82,7 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </BrowserRouter>
+        <Toaster />
       </AuthProvider>
     </ThemeProvider>
   );

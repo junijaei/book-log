@@ -1,5 +1,6 @@
 import { BookCover } from '@/components/book-cover';
 import { DateRangeDisplay } from '@/components/date-range-display';
+import { EmptyState } from '@/components/empty-state';
 import { BookDetailSkeleton } from '@/components/skeletons';
 import { StatusBadge } from '@/components/status-badge';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -25,9 +26,11 @@ import {
   renderRatingStars,
 } from '@/lib/constants';
 import type { Quote } from '@/types';
+import { Quote as QuoteIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
+import { toast } from 'sonner';
 
 export function BookDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -63,9 +66,10 @@ export function BookDetailPage() {
       setNewQuoteText('');
       setNewQuotePage('');
       setShowAddQuote(false);
+      toast.success(MESSAGES.QUOTE_ADDED);
     } catch (error) {
       console.error('Failed to add quote:', error);
-      alert(MESSAGES.FAILED_TO_CREATE);
+      toast.error(MESSAGES.FAILED_TO_CREATE);
     }
   };
 
@@ -88,7 +92,7 @@ export function BookDetailPage() {
       setEditingQuote(null);
     } catch (error) {
       console.error('Failed to update quote:', error);
-      alert(MESSAGES.FAILED_TO_SAVE);
+      toast.error(MESSAGES.FAILED_TO_SAVE);
     }
   };
 
@@ -107,7 +111,7 @@ export function BookDetailPage() {
       setQuoteToDelete(null);
     } catch (error) {
       console.error('Failed to delete quote:', error);
-      alert(MESSAGES.FAILED_TO_DELETE);
+      toast.error(MESSAGES.FAILED_TO_DELETE);
     }
   };
 
@@ -175,8 +179,7 @@ export function BookDetailPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* COMPACT BOOK HEADER - acts as context, not primary content */}
+      <main className="container mx-auto px-4 py-6 max-w-4xl animate-in fade-in-0 duration-300">
         <div className="bg-muted/30 rounded-lg p-4 mb-8">
           <div className="flex gap-4">
             <BookCover url={book.cover_image_url} alt={book.title} size="sm" />
@@ -285,7 +288,7 @@ export function BookDetailPage() {
                       {quote.noted_at}
                     </span>
                     {isOwner && (
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="sm" onClick={() => openEditDialog(quote)}>
                           {BUTTON_LABELS.EDIT}
                         </Button>
@@ -305,9 +308,10 @@ export function BookDetailPage() {
             </div>
           ) : (
             !showAddQuote && (
-              <div className="text-center py-12 text-muted-foreground">
-                <p>{MESSAGES.NO_QUOTES}</p>
-              </div>
+              <EmptyState
+                icon={<QuoteIcon size={48} strokeWidth={1} />}
+                message={MESSAGES.NO_QUOTES}
+              />
             )
           )}
         </section>

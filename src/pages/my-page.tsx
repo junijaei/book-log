@@ -1,3 +1,4 @@
+import { EmptyState } from '@/components/empty-state';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,10 +36,16 @@ import {
   PAGE_TITLES,
   PLACEHOLDERS,
 } from '@/lib/constants';
-import { Skeleton } from '@/components/ui/skeleton';
+import {
+  FriendListItemSkeleton,
+  ProfileSectionSkeleton,
+  RequestItemSkeleton,
+} from '@/components/skeletons';
 import type { PublicProfile, UpdateProfilePayload } from '@/types';
+import { Inbox, Send, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 type Tab = 'profile' | 'friends' | 'requests';
 
@@ -123,26 +130,15 @@ function ProfileSection() {
         avatar_url: data.avatar_url || null,
       });
       setIsEditing(false);
+      toast.success(MESSAGES.PROFILE_UPDATED);
     } catch (error) {
       console.error('Failed to update profile:', error);
-      alert(MESSAGES.FAILED_TO_SAVE);
+      toast.error(MESSAGES.FAILED_TO_SAVE);
     }
   };
 
   if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="pt-6 space-y-4">
-          <div className="flex items-center gap-4">
-            <Skeleton className="w-16 h-16 rounded-full" />
-            <div className="space-y-2 flex-1">
-              <Skeleton className="h-5 w-32" />
-              <Skeleton className="h-4 w-48" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <ProfileSectionSkeleton />;
   }
 
   if (!profile) return null;
@@ -201,6 +197,16 @@ function ProfileSection() {
                       value={field.value ?? ''}
                       placeholder={PLACEHOLDERS.AVATAR_URL}
                     />
+                    {field.value && (
+                      <img
+                        src={field.value}
+                        alt=""
+                        className="mt-2 w-12 h-12 rounded-full object-cover border"
+                        onError={e => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    )}
                   </Field>
                 )}
               />
@@ -289,7 +295,7 @@ function FriendsSection() {
       setConfirmDialog(null);
     } catch (error) {
       console.error('Failed:', error);
-      alert(MESSAGES.FAILED_TO_DELETE);
+      toast.error(MESSAGES.FAILED_TO_DELETE);
     }
   };
 
@@ -333,11 +339,11 @@ function FriendsSection() {
       setSearchTerm('');
       setSelectedUser(null);
       setShowAddFriend(false);
-      alert(MESSAGES.FRIEND_REQUEST_SENT);
+      toast.success(MESSAGES.FRIEND_REQUEST_SENT);
     } catch (error) {
       console.error('Failed to send request:', error);
       if (error instanceof Error) {
-        alert(error.message);
+        toast.error(error.message);
       }
     }
   };
@@ -345,15 +351,9 @@ function FriendsSection() {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="pt-6 space-y-3">
+        <CardContent className="pt-6">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <Skeleton className="w-10 h-10 rounded-full" />
-              <div className="space-y-1 flex-1">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-32" />
-              </div>
-            </div>
+            <FriendListItemSkeleton key={i} />
           ))}
         </CardContent>
       </Card>
@@ -457,7 +457,11 @@ function FriendsSection() {
 
         <CardContent className={showAddFriend ? 'pt-0' : 'pt-0'}>
           {friends.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">{MESSAGES.NO_FRIENDS}</p>
+            <EmptyState
+              icon={<Users size={48} strokeWidth={1} />}
+              message={MESSAGES.NO_FRIENDS}
+              action={{ label: BUTTON_LABELS.SEND_REQUEST, onClick: () => setShowAddFriend(true) }}
+            />
           ) : (
             <div className="space-y-1">
               {friends.map(item => (
@@ -482,7 +486,7 @@ function FriendsSection() {
                       <p className="text-xs text-muted-foreground truncate">{item.friend.bio}</p>
                     )}
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -595,7 +599,7 @@ function RequestsSection() {
       await acceptMutation.mutateAsync(friendshipId);
     } catch (error) {
       console.error('Failed to accept:', error);
-      alert(MESSAGES.FAILED_TO_SAVE);
+      toast.error(MESSAGES.FAILED_TO_SAVE);
     }
   };
 
@@ -604,7 +608,7 @@ function RequestsSection() {
       await rejectMutation.mutateAsync(friendshipId);
     } catch (error) {
       console.error('Failed to reject:', error);
-      alert(MESSAGES.FAILED_TO_SAVE);
+      toast.error(MESSAGES.FAILED_TO_SAVE);
     }
   };
 
@@ -613,7 +617,7 @@ function RequestsSection() {
       await deleteMutation.mutateAsync(friendshipId);
     } catch (error) {
       console.error('Failed to cancel:', error);
-      alert(MESSAGES.FAILED_TO_DELETE);
+      toast.error(MESSAGES.FAILED_TO_DELETE);
     }
   };
 
@@ -630,19 +634,16 @@ function RequestsSection() {
         </CardHeader>
         <CardContent className="pt-0">
           {isLoadingReceived ? (
-            <div className="space-y-3">
+            <div className="space-y-1">
               {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <Skeleton className="w-10 h-10 rounded-full" />
-                  <Skeleton className="h-4 w-24 flex-1" />
-                  <Skeleton className="h-8 w-16" />
-                </div>
+                <RequestItemSkeleton key={i} />
               ))}
             </div>
           ) : received.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">
-              {MESSAGES.NO_RECEIVED_REQUESTS}
-            </p>
+            <EmptyState
+              icon={<Inbox size={48} strokeWidth={1} />}
+              message={MESSAGES.NO_RECEIVED_REQUESTS}
+            />
           ) : (
             <div className="space-y-1">
               {received.map(item => (
@@ -716,19 +717,16 @@ function RequestsSection() {
         </CardHeader>
         <CardContent className="pt-0">
           {isLoadingSent ? (
-            <div className="space-y-3">
+            <div className="space-y-1">
               {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <Skeleton className="w-10 h-10 rounded-full" />
-                  <Skeleton className="h-4 w-24 flex-1" />
-                  <Skeleton className="h-8 w-16" />
-                </div>
+                <RequestItemSkeleton key={i} />
               ))}
             </div>
           ) : sent.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">
-              {MESSAGES.NO_SENT_REQUESTS}
-            </p>
+            <EmptyState
+              icon={<Send size={48} strokeWidth={1} />}
+              message={MESSAGES.NO_SENT_REQUESTS}
+            />
           ) : (
             <div className="space-y-1">
               {sent.map(item => (

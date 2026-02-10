@@ -1,10 +1,12 @@
 import { BookCard } from '@/components/book-card';
+import { EmptyState } from '@/components/empty-state';
 import { BookCardSkeleton } from '@/components/skeletons';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useReadingRecords } from '@/hooks';
 import { FILTER_LABELS, MESSAGES, PAGE_TITLES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import type { FeedScope, ReadingRecordFilters, ReadingRecordSort } from '@/types';
+import { Rss } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const SCOPE_OPTIONS: { value: FeedScope; label: string }[] = [
@@ -84,12 +86,10 @@ export function FeedPage() {
             ))}
           </div>
         ) : records.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="text-sm">{MESSAGES.NO_FEED_BOOKS}</p>
-          </div>
+          <EmptyState icon={<Rss size={48} strokeWidth={1} />} message={MESSAGES.NO_FEED_BOOKS} />
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in-0 duration-300">
               {records.map(record => (
                 <BookCard key={record.reading_log.id} record={record} showAuthor />
               ))}

@@ -42,6 +42,7 @@ import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
+import { toast } from 'sonner';
 
 const READING_STATUSES: ReadingStatus[] = ['want_to_read', 'reading', 'finished', 'abandoned'];
 const VISIBILITIES: Visibility[] = ['public', 'friends', 'private'];
@@ -62,7 +63,7 @@ export function BookEditPage() {
     reset,
     watch,
     setValue,
-    formState: { isSubmitting },
+    formState: { isSubmitting, isDirty },
   } = useForm<BookEditFormData>({
     defaultValues: {
       title: '',
@@ -121,6 +122,14 @@ export function BookEditPage() {
     );
   }, [record, reset]);
 
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) e.preventDefault();
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
   const onSubmit = async (data: BookEditFormData) => {
     if (!record || !id) return;
 
@@ -155,7 +164,7 @@ export function BookEditPage() {
       navigate(`/books/${id}`);
     } catch (error) {
       console.error('Failed to save:', error);
-      alert(MESSAGES.FAILED_TO_SAVE);
+      toast.error(MESSAGES.FAILED_TO_SAVE);
     }
   };
 
@@ -167,7 +176,7 @@ export function BookEditPage() {
       navigate('/');
     } catch (error) {
       console.error('Failed to delete:', error);
-      alert(MESSAGES.FAILED_TO_DELETE);
+      toast.error(MESSAGES.FAILED_TO_DELETE);
     } finally {
       setDeleteDialogOpen(false);
     }
@@ -240,11 +249,16 @@ export function BookEditPage() {
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
         <div className="container mx-auto px-4 py-3 max-w-4xl">
           <div className="flex justify-between items-center">
-            <Link to={`/books/${id}`}>
-              <Button variant="ghost" size="sm">
-                ← {BUTTON_LABELS.CANCEL}
-              </Button>
-            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (isDirty && !confirm(MESSAGES.UNSAVED_CHANGES_WARNING)) return;
+                navigate(`/books/${id}`);
+              }}
+            >
+              ← {BUTTON_LABELS.CANCEL}
+            </Button>
             <Button
               size="sm"
               onClick={handleSubmit(onSubmit)}
@@ -544,7 +558,7 @@ export function BookEditPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteQuote(index)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                         >
                           {BUTTON_LABELS.DELETE}
                         </Button>

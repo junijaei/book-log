@@ -1,44 +1,50 @@
-/**
- * Auth Guard Component
- *
- * Protects routes from unauthorized access.
- */
-
 import { useAuth } from '@/hooks/use-auth';
-import { MESSAGES } from '@/lib/constants';
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { BookCardSkeleton } from '@/components/skeletons';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface AuthGuardProps {
   children: ReactNode;
 }
 
-/**
- * Auth guard that redirects unauthenticated users to login.
- *
- * Preserves the attempted URL for redirect after login.
- *
- * @example
- * <AuthGuard>
- *   <ProtectedPage />
- * </AuthGuard>
- */
 export function AuthGuard({ children }: AuthGuardProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  // Show loading state while checking auth
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-muted-foreground">{MESSAGES.LOADING}</div>
+      <div className="min-h-screen pb-16">
+        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
+          <div className="container mx-auto px-4 py-3 max-w-6xl">
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-7 w-24" />
+              <Skeleton className="h-8 w-8 rounded-md" />
+            </div>
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-4 max-w-6xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <BookCardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+        <div className="fixed bottom-0 left-0 right-0 border-t bg-background">
+          <div className="flex items-center justify-around h-14 max-w-lg mx-auto">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <Skeleton className="h-5 w-5 rounded" />
+                <Skeleton className="h-3 w-10" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
-  // Redirect to login if not authenticated
   if (!user) {
-    // Save the attempted URL for redirecting after login
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

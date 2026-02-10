@@ -4,27 +4,16 @@ import { Skeleton } from './ui/skeleton';
 export function BookCardSkeleton() {
   return (
     <Card className="h-full flex flex-col">
-      {/* HEADER ZONE */}
       <CardHeader className="pb-2">
         <div className="flex gap-3">
-          <Skeleton className="w-16 h-24 rounded" />
-          <div className="flex-1 space-y-2">
+          <Skeleton className="w-20 h-28 rounded shrink-0" />
+          <div className="flex-1 min-w-0 space-y-2">
             <Skeleton className="h-5 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
-            <Skeleton className="h-5 w-16 mt-2" />
+            <Skeleton className="h-5 w-16 mt-2 rounded-full" />
           </div>
         </div>
       </CardHeader>
-
-      {/* BODY ZONE - Progress */}
-      <CardContent className="flex-1 py-0 px-6">
-        <div className="py-3">
-          <Skeleton className="h-2 w-full rounded-full" />
-          <Skeleton className="h-3 w-8 mt-1.5 ml-auto" />
-        </div>
-      </CardContent>
-
-      {/* FOOTER ZONE */}
       <CardFooter className="pt-2 pb-4 px-6 flex justify-between items-center border-t border-border/50 mt-auto">
         <Skeleton className="h-3 w-24" />
         <Skeleton className="h-3 w-16" />
@@ -90,6 +79,53 @@ export function BookDetailSkeleton() {
           ))}
         </div>
       </section>
+    </div>
+  );
+}
+
+export function ProfileSectionSkeleton() {
+  return (
+    <Card>
+      <CardHeader className="pb-4">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-5 w-20" />
+          <Skeleton className="h-8 w-24 rounded-md" />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-4">
+          <Skeleton className="w-16 h-16 rounded-full shrink-0" />
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function FriendListItemSkeleton() {
+  return (
+    <div className="flex items-center gap-3 p-3">
+      <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+      <div className="space-y-1.5 flex-1">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-3 w-32" />
+      </div>
+    </div>
+  );
+}
+
+export function RequestItemSkeleton() {
+  return (
+    <div className="flex items-center gap-3 p-3">
+      <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+      <div className="space-y-1.5 flex-1">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-3 w-20" />
+      </div>
+      <Skeleton className="h-8 w-16 rounded-md" />
     </div>
   );
 }

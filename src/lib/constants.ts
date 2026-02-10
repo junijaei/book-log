@@ -129,6 +129,9 @@ export const MESSAGES = {
   NO_EDIT_PERMISSION: '본인의 독서 기록만 편집할 수 있습니다.',
   NO_SEARCH_RESULTS: '검색 결과가 없습니다.',
   SEARCH_MIN_LENGTH: '2자 이상 입력하세요.',
+  QUOTE_ADDED: '인용구가 추가되었습니다.',
+  SAVED_SUCCESSFULLY: '저장되었습니다.',
+  UNSAVED_CHANGES_WARNING: '변경사항이 저장되지 않습니다. 나가시겠습니까?',
 } as const;
 
 // Filter Labels
