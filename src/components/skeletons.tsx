@@ -1,20 +1,22 @@
-import { Card, CardContent, CardFooter, CardHeader } from './ui/card';
+import { MISC } from '@/lib/constants';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
 
 export function BookCardSkeleton() {
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col min-h-[219px]">
       <CardHeader className="pb-2">
         <div className="flex gap-3">
           <Skeleton className="w-20 h-28 rounded shrink-0" />
-          <div className="flex-1 min-w-0 space-y-2">
+          <div className="flex-1 min-w-0 space-y-2.5 mb-3">
             <Skeleton className="h-5 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
             <Skeleton className="h-5 w-16 mt-2 rounded-full" />
+            <Skeleton className="h-3 w-full rounded-full mt-3" />
           </div>
         </div>
       </CardHeader>
-      <CardFooter className="pt-2 pb-4 px-6 flex justify-between items-center border-t border-border/50 mt-auto">
+      <CardFooter className="pt-2 sm:pt-2 sm:pb-4 sm:px-6 pb-4 px-6 flex justify-between items-center border-t border-border/50 mt-auto">
         <Skeleton className="h-3 w-24" />
         <Skeleton className="h-3 w-16" />
       </CardFooter>
@@ -88,7 +90,7 @@ export function ProfileSectionSkeleton() {
     <Card>
       <CardHeader className="pb-4">
         <div className="flex justify-between items-center">
-          <Skeleton className="h-5 w-20" />
+          <CardTitle className="text-base">{MISC.MY_PAGE}</CardTitle>
           <Skeleton className="h-8 w-24 rounded-md" />
         </div>
       </CardHeader>
@@ -107,13 +109,25 @@ export function ProfileSectionSkeleton() {
 
 export function FriendListItemSkeleton() {
   return (
-    <div className="flex items-center gap-3 p-3">
-      <Skeleton className="w-10 h-10 rounded-full shrink-0" />
-      <div className="space-y-1.5 flex-1">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-3 w-32" />
-      </div>
-    </div>
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-base">{MISC.FRIEND_LIST}</CardTitle>
+          <Skeleton className="h-8 w-20 rounded-md" />
+        </div>
+      </CardHeader>
+      <CardContent className="pt-6">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 p-3">
+            <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+            <div className="space-y-1.5 flex-1">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
 

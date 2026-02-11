@@ -1,4 +1,9 @@
 import { EmptyState } from '@/components/empty-state';
+import {
+  FriendListItemSkeleton,
+  ProfileSectionSkeleton,
+  RequestItemSkeleton,
+} from '@/components/skeletons';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +19,6 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { useAuth } from '@/hooks/use-auth';
 import {
   useAcceptFriendRequest,
   useBlockUser,
@@ -28,6 +32,7 @@ import {
   useSentRequests,
   useUpdateProfile,
 } from '@/hooks';
+import { useAuth } from '@/hooks/use-auth';
 import {
   BUTTON_LABELS,
   FIELD_LABELS,
@@ -36,11 +41,6 @@ import {
   PAGE_TITLES,
   PLACEHOLDERS,
 } from '@/lib/constants';
-import {
-  FriendListItemSkeleton,
-  ProfileSectionSkeleton,
-  RequestItemSkeleton,
-} from '@/components/skeletons';
 import type { PublicProfile, UpdateProfilePayload } from '@/types';
 import { Inbox, Send, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -137,9 +137,7 @@ function ProfileSection() {
     }
   };
 
-  if (isLoading) {
-    return <ProfileSectionSkeleton />;
-  }
+  if (isLoading) return <ProfileSectionSkeleton />;
 
   if (!profile) return null;
 
@@ -349,19 +347,11 @@ function FriendsSection() {
   };
 
   if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <FriendListItemSkeleton key={i} />
-          ))}
-        </CardContent>
-      </Card>
-    );
+    return <FriendListItemSkeleton />;
   }
 
   return (
-    <div className="space-y-4">
+    <>
       <Card>
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
@@ -460,7 +450,10 @@ function FriendsSection() {
             <EmptyState
               icon={<Users size={48} strokeWidth={1} />}
               message={MESSAGES.NO_FRIENDS}
-              action={{ label: BUTTON_LABELS.SEND_REQUEST, onClick: () => setShowAddFriend(true) }}
+              action={{
+                label: BUTTON_LABELS.SEND_REQUEST,
+                onClick: () => setShowAddFriend(true),
+              }}
             />
           ) : (
             <div className="space-y-1">
@@ -566,7 +559,7 @@ function FriendsSection() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
 
