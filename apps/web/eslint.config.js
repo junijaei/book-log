@@ -19,6 +19,11 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    parserOptions: {
+      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      // 이 줄을 추가하세요!
+      tsconfigRootDir: import.meta.dirname,
+    },
     rules: {
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^_' }],

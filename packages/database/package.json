@@ -1,0 +1,27 @@
+{
+  "name": "@book-log/database",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./index.ts"
+    },
+    "./database": {
+      "types": "./database.ts",
+      "default": "./database.ts"
+    },
+    "./entities": {
+      "types": "./entities.ts",
+      "default": "./entities.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "5.9.2"
+  }
+}

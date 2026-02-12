@@ -1,5 +1,10 @@
 {
+  "name": "@book-log/supabase",
+  "private": true,
   "type": "module",
+  "dependencies": {
+    "@book-log/database": "workspace:*"
+  },
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

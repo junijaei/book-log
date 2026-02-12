@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "@book-log/database": "../../../packages/database/index.ts",
+    "@book-log/database/": "../../../packages/database/"
+  }
+}
