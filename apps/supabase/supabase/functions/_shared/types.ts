@@ -59,6 +59,7 @@ export interface ReadingRecord {
 
 export interface ReadingRecordFilters {
   status?: ReadingStatus[];
+  scope?: FeedScope;
   start_date_from?: string;
   start_date_to?: string;
   end_date_from?: string;

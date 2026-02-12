@@ -4,19 +4,25 @@
  * Request/response types for API operations.
  */
 
-import type { Book, FriendAction, ReadingLog, ReadingStatus, Visibility } from './entities';
+import type {
+  Book,
+  FriendAction,
+  ReadingLog,
+  ReadingStatus,
+  TablesInsert,
+  TablesUpdate,
+  Visibility,
+} from '@book-log/database';
 
 // =============================================================================
 // Book API Types
 // =============================================================================
 
 /** Input for creating a new book */
-export interface CreateBookInput {
-  title: string;
-  author: string;
-  cover_image_url?: string | null;
-  total_pages?: number | null;
-}
+export type CreateBookInput = Pick<
+  TablesInsert<'books'>,
+  'title' | 'author' | 'cover_image_url' | 'total_pages'
+>;
 
 /** Response from POST /reading-records (book created with empty reading log) */
 export interface CreateBookResponse {
@@ -29,45 +35,32 @@ export interface CreateBookResponse {
 // =============================================================================
 
 /** Input for creating a reading log */
-export interface CreateReadingLogInput {
-  book_id: string;
-  status?: ReadingStatus;
-  current_page?: number | null;
-  rating?: number | null;
-  start_date?: string | null;
-  end_date?: string | null;
-  review?: string | null;
-}
+export type CreateReadingLogInput = Pick<
+  TablesInsert<'reading_logs'>,
+  'book_id' | 'status' | 'current_page' | 'rating' | 'start_date' | 'end_date' | 'review'
+>;
 
 /** Input for updating a reading log */
-export interface UpdateReadingLogInput {
-  status?: ReadingStatus;
-  current_page?: number | null;
-  rating?: number | null;
-  start_date?: string | null;
-  end_date?: string | null;
-  review?: string | null;
-}
+export type UpdateReadingLogInput = Pick<
+  TablesUpdate<'reading_logs'>,
+  'status' | 'current_page' | 'rating' | 'start_date' | 'end_date' | 'review'
+>;
 
 // =============================================================================
 // Quote API Types
 // =============================================================================
 
 /** Input for creating a quote */
-export interface CreateQuoteInput {
-  reading_log_id: string;
-  text: string;
-  page_number: number;
-  noted_at?: string | null;
-}
+export type CreateQuoteInput = Pick<
+  TablesInsert<'quotes'>,
+  'reading_log_id' | 'text' | 'page_number' | 'noted_at'
+>;
 
 /** Input for updating a quote (includes id) */
-export interface UpdateQuoteInput {
-  id: string;
-  text?: string;
-  page_number?: number;
-  noted_at?: string | null;
-}
+export type UpdateQuoteInput = Pick<
+  TablesUpdate<'quotes'>,
+  'text' | 'page_number' | 'noted_at'
+> & { id: string };
 
 /** Input for deleting a reading record (ID passed as query param) */
 export interface DeleteReadingRecordInput {
@@ -92,26 +85,15 @@ export interface DeleteQuoteResponse {
 // =============================================================================
 
 /** Quote data for upsert operation */
-export interface UpsertQuoteData {
-  id?: string;
-  text: string;
-  page_number: number;
-  noted_at?: string | null;
-}
+export type UpsertQuoteData = CreateQuoteInput & { id?: string };
 
 /** Payload for PUT /reading-records */
 export interface UpsertPayload {
   /** Book data - include id to update existing */
   book: CreateBookInput & { id?: string };
   /** Reading log data - include id to update existing */
-  reading_log: {
+  reading_log: UpdateReadingLogInput & {
     id?: string;
-    status?: ReadingStatus;
-    current_page?: number | null;
-    rating?: number | null;
-    start_date?: string | null;
-    end_date?: string | null;
-    review?: string | null;
     visibility?: Visibility;
   };
   /** Quotes to create/update */
@@ -181,15 +163,8 @@ export interface FriendUnblockResponse {
 }
 
 // =============================================================================
-// Profile API Types
+// Profile API Types — UpdateProfilePayload re-exported from @book-log/database
 // =============================================================================
-
-/** Payload for PUT /profiles — partial update */
-export interface UpdateProfilePayload {
-  nickname?: string;
-  avatar_url?: string | null;
-  bio?: string | null;
-}
 
 // =============================================================================
 // Error Types

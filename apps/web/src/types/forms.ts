@@ -4,7 +4,7 @@
  * Types for form state and validation.
  */
 
-import type { ReadingStatus, Visibility } from './entities';
+import type { ReadingStatus, Visibility } from '@book-log/database';
 
 /** Book form data */
 export interface BookFormData {
@@ -29,6 +29,7 @@ export interface ReadingLogFormData {
 export interface BookEditFormData extends BookFormData, ReadingLogFormData {}
 
 /** Local quote state for editing */
+// We use a loose type here because form inputs might be in progress
 export interface LocalQuote {
   id?: string;
   text: string;

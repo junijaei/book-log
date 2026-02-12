@@ -2,9 +2,11 @@
  * Type Exports
  *
  * Re-exports all types from categorized files.
+ * Entity, filter, and database types originate from @book-log/database (SSOT)
+ * and are re-exported through the local wrapper files for path consistency.
  */
 
-// Entity types
+// Entity types (from @book-log/database via ./entities)
 export type {
   ReadingStatus,
   Visibility,
@@ -14,6 +16,7 @@ export type {
   UserProfile,
   Profile,
   Quote,
+  Review,
   ReadingRecord,
   FriendshipStatus,
   FriendAction,
@@ -22,9 +25,10 @@ export type {
   ReceivedRequestItem,
   SentRequestItem,
   PublicProfile,
+  UpdateProfilePayload,
 } from './entities';
 
-// API types
+// API types (FE-only request/response shapes)
 export type {
   CreateBookInput,
   CreateBookResponse,
@@ -38,7 +42,6 @@ export type {
   UpsertQuoteData,
   UpsertPayload,
   UpsertReadingRecordResponse,
-  UpdateProfilePayload,
   FriendRequestBody,
   FriendRequestResponse,
   FriendAutoAcceptResponse,
@@ -50,7 +53,7 @@ export type {
   EdgeFunctionErrorResponse,
 } from './api';
 
-// Filter/sort/pagination types
+// Filter/sort/pagination types (from @book-log/database via ./filters)
 export type {
   ReadingRecordFilters,
   ReadingRecordSortField,
@@ -60,7 +63,7 @@ export type {
   PaginatedResponse,
 } from './filters';
 
-// Form types
+// Form types (FE-only)
 export type {
   BookFormData,
   ReadingLogFormData,
@@ -69,5 +72,5 @@ export type {
   NewQuoteFormData,
 } from './forms';
 
-// Database types (for Supabase client)
+// Database types (from @book-log/database via ./database)
 export type { Database, Tables, InsertTables, UpdateTables } from './database';
