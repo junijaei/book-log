@@ -1,29 +1,30 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import type {
+  Book,
+  FeedScope,
+  Quote,
+  ReadingLog,
+  ReadingRecord,
+  ReadingRecordFilters,
+  ReadingRecordSort,
+  ReadingStatus,
+  Review,
+} from '../_shared/index.ts';
 import {
   VALID_SCOPES,
   authenticateRequest,
   corsResponse,
-  errorResponse,
-  successResponse,
   createdResponse,
-  isValidUUID,
+  errorResponse,
   escapeSearchTerm,
+  getBlockedUserIds,
+  getFriendIds,
+  isValidUUID,
   sanitizePagination,
+  successResponse,
   validateFilters,
   validateSort,
-  getFriendIds,
-  getBlockedUserIds,
-} from '../_shared/index.ts';
-import type {
-  ReadingStatus,
-  FeedScope,
-  Book,
-  ReadingLog,
-  Quote,
-  ReadingRecord,
-  ReadingRecordFilters,
-  ReadingRecordSort,
 } from '../_shared/index.ts';
 
 // =============================================================================
@@ -123,7 +124,7 @@ async function handleGetList(
   let query = supabase.from('reading_logs').select(
     `
       id, book_id, status, current_page, rating,
-      start_date, end_date, review, visibility, notion_page_id,
+      start_date, end_date, visibility, notion_page_id,
       created_at, updated_at, user_id,
       books!inner ( id, title, author, cover_image_url, total_pages, created_at, updated_at ),
       profiles!inner ( nickname, avatar_url )
@@ -214,15 +215,30 @@ async function handleGetList(
 
   const readingLogIds = readingLogsWithBooks.map((rl: { id: string }) => rl.id);
 
-  const { data: allQuotes, error: quotesError } = await supabase
-    .from('quotes')
-    .select('*')
-    .in('reading_log_id', readingLogIds)
-    .order('page_number', { ascending: true });
+  const [
+    { data: allQuotes, error: quotesError },
+    { data: allReviews, error: reviewsError },
+  ] = await Promise.all([
+    supabase
+      .from('quotes')
+      .select('*')
+      .in('reading_log_id', readingLogIds)
+      .order('page_number', { ascending: true }),
+    supabase
+      .from('reviews')
+      .select('*')
+      .in('reading_log_id', readingLogIds)
+      .order('created_at', { ascending: false }),
+  ]);
 
   if (quotesError) {
     console.error('Quotes query error:', quotesError);
     return errorResponse(`Failed to fetch quotes: ${quotesError.message}`);
+  }
+
+  if (reviewsError) {
+    console.error('Reviews query error:', reviewsError);
+    return errorResponse(`Failed to fetch reviews: ${reviewsError.message}`);
   }
 
   const quotesByLogId = new Map<string, Quote[]>();
@@ -232,7 +248,14 @@ async function handleGetList(
     quotesByLogId.set(quote.reading_log_id, existing);
   }
 
-  const records: ReadingRecord[] = readingLogsWithBooks.map((row: Record<string, unknown>) => {
+  const reviewsByLogId = new Map<string, Review[]>();
+  for (const review of allReviews || []) {
+    const existing = reviewsByLogId.get(review.reading_log_id) || [];
+    existing.push(review);
+    reviewsByLogId.set(review.reading_log_id, existing);
+  }
+
+  const records: ReadingRecord[] = readingLogsWithBooks.map((row: ReadingLog & Record<string, unknown>) => {
     const book = row.books as unknown as Book;
     const profile = row.profiles as { nickname: string; avatar_url: string | null } | null;
 
@@ -244,7 +267,6 @@ async function handleGetList(
       rating: row.rating,
       start_date: row.start_date,
       end_date: row.end_date,
-      review: row.review,
       visibility: row.visibility,
       notion_page_id: row.notion_page_id,
       created_at: row.created_at,
@@ -252,7 +274,13 @@ async function handleGetList(
       user_id: row.user_id,
     };
 
-    return { book, reading_log: readingLog, quotes: quotesByLogId.get(row.id) || [], profile };
+    return {
+      book,
+      reading_log: readingLog,
+      quotes: quotesByLogId.get(row.id) || [],
+      reviews: reviewsByLogId.get(row.id) || [],
+      profile,
+    };
   });
 
   return successResponse(records, {
@@ -282,7 +310,7 @@ async function handleGetOne(
     .select(
       `
         id, book_id, status, current_page, rating,
-        start_date, end_date, review, visibility, notion_page_id,
+        start_date, end_date, visibility, notion_page_id,
         created_at, updated_at, user_id,
         books!inner ( id, title, author, cover_image_url, total_pages, created_at, updated_at ),
         profiles!inner ( nickname, avatar_url )
@@ -328,18 +356,33 @@ async function handleGetOne(
   }
 
   // ========================================================================
-  // Fetch Quotes & Transform
+  // Fetch Quotes, Reviews & Transform
   // ========================================================================
 
-  const { data: quotes, error: quotesError } = await supabase
-    .from('quotes')
-    .select('*')
-    .eq('reading_log_id', id)
-    .order('page_number', { ascending: true });
+  const [
+    { data: quotes, error: quotesError },
+    { data: reviews, error: reviewsError },
+  ] = await Promise.all([
+    supabase
+      .from('quotes')
+      .select('*')
+      .eq('reading_log_id', id)
+      .order('page_number', { ascending: true }),
+    supabase
+      .from('reviews')
+      .select('*')
+      .eq('reading_log_id', id)
+      .order('created_at', { ascending: false }),
+  ]);
 
   if (quotesError) {
     console.error('Quotes query error:', quotesError);
     return errorResponse(`Failed to fetch quotes: ${quotesError.message}`);
+  }
+
+  if (reviewsError) {
+    console.error('Reviews query error:', reviewsError);
+    return errorResponse(`Failed to fetch reviews: ${reviewsError.message}`);
   }
 
   const book = readingLogWithBook.books as unknown as Book;
@@ -356,7 +399,6 @@ async function handleGetOne(
     rating: readingLogWithBook.rating,
     start_date: readingLogWithBook.start_date,
     end_date: readingLogWithBook.end_date,
-    review: readingLogWithBook.review,
     visibility: readingLogWithBook.visibility,
     notion_page_id: readingLogWithBook.notion_page_id,
     created_at: readingLogWithBook.created_at,
@@ -364,7 +406,13 @@ async function handleGetOne(
     user_id: readingLogWithBook.user_id,
   };
 
-  const record: ReadingRecord = { book, reading_log: readingLog, quotes: quotes || [], profile };
+  const record: ReadingRecord = {
+    book,
+    reading_log: readingLog,
+    quotes: quotes || [],
+    reviews: reviews || [],
+    profile,
+  };
 
   return successResponse(record);
 }
@@ -409,7 +457,6 @@ async function handleCreate(
         rating: null,
         start_date: null,
         end_date: null,
-        review: null,
         notion_page_id: null,
         user_id: userId,
       },
@@ -535,7 +582,7 @@ async function handleDelete(
 
   const bookId = readingLog.book_id;
 
-  // quotes는 FK ON DELETE CASCADE로 자동 삭제
+  // quotes, reviews는 FK ON DELETE CASCADE로 자동 삭제
   const { error: deleteLogError } = await supabase.from('reading_logs').delete().eq('id', id);
 
   if (deleteLogError) return errorResponse(deleteLogError.message, 500);

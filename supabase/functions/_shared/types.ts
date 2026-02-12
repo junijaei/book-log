@@ -22,7 +22,6 @@ export interface ReadingLog {
   rating: number | null;
   start_date: string | null;
   end_date: string | null;
-  review: string | null;
   visibility: Visibility;
   notion_page_id: string | null;
   created_at: string;
@@ -39,10 +38,22 @@ export interface Quote {
   created_at: string;
 }
 
+export interface Review {
+  id: string;
+  reading_log_id: string;
+  user_id: string;
+  content: string;
+  page_number: number | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ReadingRecord {
   book: Book;
   reading_log: ReadingLog;
   quotes: Quote[];
+  reviews: Review[];
   profile: { nickname: string; avatar_url: string | null } | null;
 }
 
