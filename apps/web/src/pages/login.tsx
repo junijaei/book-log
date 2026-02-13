@@ -198,7 +198,7 @@ function PasswordForm() {
 // =============================================================================
 
 export function LoginPage() {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -211,7 +211,7 @@ export function LoginPage() {
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shadow-sm">
             {/* <BookOpen className="w-6 h-6 text-primary-foreground" /> */}
-            {theme === 'dark' ? (
+            {resolvedTheme === 'dark' ? (
               <img src="/logo-black.png" className="w-12 h-12" />
             ) : (
               <img src="/logo-white.png" className="w-12 h-12" />
