@@ -30,14 +30,14 @@ export function BookCardList({
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in-0 duration-300">
+      <div className="flex flex-col gap-2 animate-in fade-in-0 duration-300">
         {records.map(record => (
           <BookCard key={record.reading_log.id} record={record} showAuthor={showAuthor} />
         ))}
       </div>
 
       {isFetchingNextPage && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        <div className="flex flex-col gap-2 mt-2">
           {Array.from({ length: 3 }).map((_, i) => (
             <BookCardSkeleton key={i} />
           ))}

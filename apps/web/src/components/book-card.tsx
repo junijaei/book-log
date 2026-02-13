@@ -1,9 +1,9 @@
-import { formatDateRange, renderRatingStars } from '@/lib/constants';
+import { formatDateRange } from '@/lib/constants';
 import type { ReadingRecord } from '@/types';
+import { BookMarked, MessageSquareQuote, NotebookPen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BookCover } from './book-cover';
 import { StatusBadge } from './status-badge';
-import { Card, CardFooter, CardHeader } from './ui/card';
 
 interface BookCardProps {
   record: ReadingRecord;
@@ -11,7 +11,7 @@ interface BookCardProps {
 }
 
 export function BookCard({ record, showAuthor }: BookCardProps) {
-  const { book, reading_log, profile } = record;
+  const { book, reading_log, quotes, reviews, profile } = record;
 
   const progress =
     book.total_pages && reading_log.current_page
@@ -19,53 +19,88 @@ export function BookCard({ record, showAuthor }: BookCardProps) {
       : null;
 
   const dateRange = formatDateRange(reading_log.start_date, reading_log.end_date);
+  const quoteCount = quotes.length;
+  const hasReview = reviews.length > 0;
 
   return (
-    <Link to={`/books/${reading_log.id}`} className="block">
-      <Card className="hover:shadow-md transition-shadow cursor-pointer h-full flex flex-col">
-        {/* HEADER ZONE: Book info + Status */}
-        <CardHeader className="pb-2">
-          <div className="flex gap-3">
-            <BookCover url={book.cover_image_url} alt={book.title} size="sm" />
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-base leading-tight line-clamp-2">{book.title}</h3>
-              <p className="text-sm text-muted-foreground mt-0.5 truncate">{book.author}</p>
-              {showAuthor && profile && (
-                <p className="text-xs text-muted-foreground/70 mt-0.5 truncate">
-                  by {profile.nickname}
-                </p>
-              )}
-              <div className="mt-2">
-                <StatusBadge status={reading_log.status} />
-              </div>
-              {progress !== null && (
-                <div className="py-3">
-                  <div className="w-full bg-secondary rounded-full h-2">
-                    <div
-                      className="bg-primary h-2 rounded-full transition-all duration-700 ease-out"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1.5 text-right">{progress}%</p>
-                </div>
-              )}
-            </div>
+    <Link to={`/books/${reading_log.id}`} className="block group">
+      <div className="flex gap-4 px-4 py-3.5 rounded-xl border bg-card hover:bg-accent/40 hover:border-accent transition-colors duration-150">
+        {/* ── 표지 ── */}
+        <div className="shrink-0 self-start mt-0.5">
+          <BookCover url={book.cover_image_url} alt={book.title} size="sm" />
+        </div>
+
+        {/* ── 메인 콘텐츠 ── */}
+        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+          {/* 줄 1: 제목 + 평점 */}
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-semibold text-base leading-snug line-clamp-1 group-hover:text-primary transition-colors">
+              {book.title}
+            </h3>
+            {reading_log.rating !== null && reading_log.rating > 0 && (
+              <span className="text-amber-400 text-sm shrink-0 leading-snug">
+                {'★'.repeat(reading_log.rating)}
+                {'☆'.repeat(5 - reading_log.rating)}
+              </span>
+            )}
           </div>
-        </CardHeader>
 
-        {/* BODY ZONE: Progress indicator (contextual) */}
-        {/* <CardContent className="flex-1 py-0 px-6"></CardContent> */}
+          {/* 줄 2: 저자 + 상태 배지 + 피드용 닉네임 */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-muted-foreground truncate">{book.author}</span>
+            <StatusBadge status={reading_log.status} />
+            {showAuthor && profile && (
+              <span className="text-xs text-muted-foreground/60">— {profile.nickname}</span>
+            )}
+          </div>
 
-        {/* FOOTER ZONE: Metadata (de-emphasized) */}
-        <CardFooter className="pt-2 sm:pt-2 sm:pb-4 sm:px-6 pb-4 px-6 flex justify-between items-center border-t border-border/50 mt-auto">
-          <span className="text-xs text-muted-foreground/70">{dateRange || '\u00A0'}</span>
-          {reading_log.rating && (
-            <span className="text-xs text-amber-500/70">
-              {renderRatingStars(reading_log.rating)}
-            </span>
+          {/* 줄 3: 진행률 바 (읽는 중 + 페이지 정보 있을 때) */}
+          {progress !== null && (
+            <div className="flex items-center gap-2 mt-0.5">
+              <div className="flex-1 bg-secondary rounded-full h-1.5">
+                <div
+                  className="bg-primary h-1.5 rounded-full transition-all duration-700 ease-out"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
+                {reading_log.current_page?.toLocaleString()} / {book.total_pages?.toLocaleString()}p
+                &nbsp;{progress}%
+              </span>
+            </div>
           )}
-        </CardFooter>
-      </Card>
+
+          {/* 줄 4: 메타데이터 칩 */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-auto pt-0.5">
+            {/* 날짜 범위 */}
+            {dateRange && <span className="text-xs text-muted-foreground/70">{dateRange}</span>}
+
+            {/* 총 페이지 (진행률 바 없을 때만) */}
+            {progress === null && book.total_pages && (
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/70">
+                <BookMarked className="w-3 h-3" />
+                {book.total_pages.toLocaleString()}p
+              </span>
+            )}
+
+            {/* 인용구 수 */}
+            {quoteCount > 0 && (
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/70">
+                <MessageSquareQuote className="w-3 h-3" />
+                {quoteCount}
+              </span>
+            )}
+
+            {/* 감상문 여부 */}
+            {hasReview && (
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/70">
+                <NotebookPen className="w-3 h-3" />
+                감상
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
     </Link>
   );
 }

@@ -1,32 +1,41 @@
 import { MISC } from '@/lib/constants';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
 
 export function BookCardSkeleton() {
   return (
-    <Card className="h-full flex flex-col min-h-[219px]">
-      <CardHeader className="pb-2">
-        <div className="flex gap-3">
-          <Skeleton className="w-20 h-28 rounded shrink-0" />
-          <div className="flex-1 min-w-0 space-y-2.5 mb-3">
-            <Skeleton className="h-5 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-            <Skeleton className="h-5 w-16 mt-2 rounded-full" />
-            <Skeleton className="h-3 w-full rounded-full mt-3" />
-          </div>
+    <div className="flex gap-4 px-4 py-3.5 rounded-xl border bg-card">
+      {/* 표지 */}
+      <Skeleton className="w-20 h-28 rounded shrink-0" />
+
+      {/* 메인 콘텐츠 */}
+      <div className="flex-1 min-w-0 flex flex-col gap-2 py-0.5">
+        {/* 제목 + 평점 */}
+        <div className="flex items-center justify-between gap-2">
+          <Skeleton className="h-5 w-2/3" />
+          <Skeleton className="h-4 w-16 shrink-0" />
         </div>
-      </CardHeader>
-      <CardFooter className="pt-2 sm:pt-2 sm:pb-4 sm:px-6 pb-4 px-6 flex justify-between items-center border-t border-border/50 mt-auto">
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="h-3 w-16" />
-      </CardFooter>
-    </Card>
+        {/* 저자 + 상태 배지 */}
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-5 w-14 rounded-full" />
+        </div>
+        {/* 진행률 바 */}
+        <Skeleton className="h-1.5 w-full rounded-full mt-0.5" />
+        {/* 메타데이터 칩 */}
+        <div className="flex items-center gap-3 mt-auto pt-0.5">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-3 w-10" />
+          <Skeleton className="h-3 w-10" />
+        </div>
+      </div>
+    </div>
   );
 }
 
 export function BookListSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="flex flex-col gap-2">
       {Array.from({ length: 6 }).map((_, i) => (
         <BookCardSkeleton key={i} />
       ))}
