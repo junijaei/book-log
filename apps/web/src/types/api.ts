@@ -81,11 +81,36 @@ export interface DeleteQuoteResponse {
 }
 
 // =============================================================================
+// Review API Types
+// =============================================================================
+
+/** Input for creating a review */
+export type CreateReviewInput = Pick<
+  TablesInsert<'reviews'>,
+  'reading_log_id' | 'content' | 'page_number' | 'reviewed_at'
+>;
+
+/** Input for updating a review (includes id) */
+export type UpdateReviewInput = Pick<
+  TablesUpdate<'reviews'>,
+  'content' | 'page_number' | 'reviewed_at'
+> & { id: string };
+
+/** Response from DELETE /reviews */
+export interface DeleteReviewResponse {
+  deleted: true;
+  review_id: string;
+}
+
+// =============================================================================
 // Upsert API Types
 // =============================================================================
 
 /** Quote data for upsert operation */
 export type UpsertQuoteData = CreateQuoteInput & { id?: string };
+
+/** Review data for upsert operation */
+export type UpsertReviewData = CreateReviewInput & { id?: string };
 
 /** Payload for PUT /reading-records */
 export interface UpsertPayload {
@@ -100,6 +125,10 @@ export interface UpsertPayload {
   quotes?: UpsertQuoteData[];
   /** Quote IDs to delete */
   delete_quote_ids?: string[];
+  /** Reviews to create/update */
+  reviews?: UpsertReviewData[];
+  /** Review IDs to delete */
+  delete_review_ids?: string[];
 }
 
 /** Response from PUT /reading-records */

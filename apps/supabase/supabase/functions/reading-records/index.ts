@@ -472,7 +472,7 @@ async function handleCreate(
 }
 
 // =============================================================================
-// PUT /reading-records — Upsert (Book + ReadingLog + Quotes)
+// PUT /reading-records — Upsert (Book + ReadingLog + Quotes + Reviews)
 // =============================================================================
 
 interface UpsertPayload {
@@ -480,6 +480,8 @@ interface UpsertPayload {
   reading_log?: { id?: string; [key: string]: unknown };
   quotes?: { id?: string; [key: string]: unknown }[];
   delete_quote_ids?: string[];
+  reviews?: { id?: string; [key: string]: unknown }[];
+  delete_review_ids?: string[];
 }
 
 async function handleUpsert(
@@ -530,6 +532,7 @@ async function handleUpsert(
     }
   }
 
+  // Handle Quotes
   if (payload.quotes?.length) {
     const insertQuotes = payload.quotes
       .filter((q) => !q.id)
@@ -550,6 +553,30 @@ async function handleUpsert(
 
   if (payload.delete_quote_ids?.length) {
     const { error } = await supabase.from('quotes').delete().in('id', payload.delete_quote_ids);
+    if (error) return errorResponse(error.message, 500);
+  }
+
+  // Handle Reviews
+  if (payload.reviews?.length) {
+    const insertReviews = payload.reviews
+      .filter((r) => !r.id)
+      .map((r) => ({ ...r, reading_log_id: readingLogId, user_id: userId }));
+    const updateReviews = payload.reviews.filter((r) => r.id);
+
+    if (insertReviews.length) {
+      const { error } = await supabase.from('reviews').insert(insertReviews);
+      if (error) return errorResponse(error.message, 500);
+    }
+
+    for (const r of updateReviews) {
+      const { id, ...rest } = r;
+      const { error } = await supabase.from('reviews').update(rest).eq('id', id);
+      if (error) return errorResponse(error.message, 500);
+    }
+  }
+
+  if (payload.delete_review_ids?.length) {
+    const { error } = await supabase.from('reviews').delete().in('id', payload.delete_review_ids);
     if (error) return errorResponse(error.message, 500);
   }
 

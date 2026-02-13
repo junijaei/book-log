@@ -51,6 +51,10 @@ export type {
   FriendBlockResponse,
   FriendUnblockResponse,
   EdgeFunctionErrorResponse,
+  CreateReviewInput,
+  UpdateReviewInput,
+  DeleteReviewResponse,
+  UpsertReviewData,
 } from './api';
 
 // Filter/sort/pagination types (from @book-log/database via ./filters)
