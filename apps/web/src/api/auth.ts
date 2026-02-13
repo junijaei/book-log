@@ -4,9 +4,76 @@
  * Functions for user authentication and session management.
  */
 
-import type { Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { ApiError } from './errors';
+
+/**
+ * Signs in (or signs up) a user via Magic Link.
+ * Supabase sends a one-time login link to the provided email address.
+ * New users are automatically registered.
+ *
+ * @param email - The user's email address
+ * @param redirectTo - URL to redirect to after clicking the magic link (defaults to /auth/callback)
+ * @throws {ApiError} If the request fails
+ *
+ * @example
+ * await signInWithMagicLink('user@example.com');
+ */
+export async function signInWithMagicLink(email: string, redirectTo?: string): Promise<void> {
+  try {
+    const emailRedirectTo = redirectTo ?? `${window.location.origin}/auth/callback`;
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo,
+      },
+    });
+
+    if (error) {
+      throw new ApiError(error.message, error.status, error.code, error);
+    }
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(error instanceof Error ? error.message : '매직 링크 전송에 실패했습니다');
+  }
+}
+
+/**
+ * Verifies an OTP token hash from a magic link callback (PKCE flow).
+ * Call this on the /auth/callback page after the user clicks the magic link.
+ *
+ * @param tokenHash - The token_hash query parameter from the callback URL
+ * @param type - The OTP type (defaults to 'email')
+ * @returns The session if verification succeeds
+ * @throws {ApiError} If verification fails
+ */
+export async function verifyOtpToken(
+  tokenHash: string,
+  type: 'email' | 'magiclink' = 'email'
+): Promise<Session> {
+  try {
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type,
+    });
+
+    if (error) {
+      throw new ApiError(error.message, error.status, error.code, error);
+    }
+
+    if (!data.session) {
+      throw new ApiError('인증 후 세션을 가져오지 못했습니다');
+    }
+
+    return data.session;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(error instanceof Error ? error.message : '매직 링크 인증에 실패했습니다');
+  }
+}
 
 /**
  * Signs in a user with email and password.
@@ -25,6 +92,8 @@ export async function signInWithPassword(email: string, password: string): Promi
       email,
       password,
     });
+
+    console.log(data, error);
 
     if (error) {
       throw new ApiError(error.message, error.status, error.code, error);

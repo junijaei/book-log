@@ -4,8 +4,8 @@
  * Centralized Supabase client initialization with type safety.
  */
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Supabase project URL from environment variables.
@@ -42,6 +42,12 @@ export const supabase: SupabaseClient<Database> = createClient<Database>(
       persistSession: true,
       detectSessionInUrl: true,
       flowType: 'pkce',
+    },
+    global: {
+      fetch: (...args) => {
+        console.log('FETCH:', args);
+        return fetch(...args);
+      },
     },
   }
 );

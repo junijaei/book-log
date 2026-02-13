@@ -6,10 +6,12 @@
 
 import {
   signInWithPassword as apiSignIn,
+  signInWithMagicLink as apiSignInWithMagicLink,
   signOut as apiSignOut,
   getSession,
   onAuthStateChange,
 } from '@/api/auth';
+import { queryClient } from '@/lib/query-client';
 import type { AuthContextType } from '@/types/auth';
 import type { Session, User } from '@supabase/supabase-js';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
@@ -54,10 +56,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     initAuth();
 
     // Subscribe to auth changes
-    const unsubscribe = onAuthStateChange((_event, newSession) => {
+    const unsubscribe = onAuthStateChange((event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       setLoading(false);
+
+      if (event === 'SIGNED_OUT') {
+        // 로그아웃 시 이전 유저 캐시 전체 제거
+        queryClient.clear();
+      } else if (event === 'SIGNED_IN') {
+        // 로그인 시 stale 데이터 강제 재조회 (유저 전환 대응)
+        void queryClient.invalidateQueries();
+      }
     });
 
     return unsubscribe;
@@ -67,6 +77,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const newSession = await apiSignIn(email, password);
     setSession(newSession);
     setUser(newSession.user);
+  }, []);
+
+  const signInWithMagicLink = useCallback(async (email: string) => {
+    await apiSignInWithMagicLink(email);
   }, []);
 
   const signOut = useCallback(async () => {
@@ -80,6 +94,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     session,
     loading,
     signIn,
+    signInWithMagicLink,
     signOut,
   };
 

@@ -5,6 +5,8 @@
 // Auth
 export {
   signInWithPassword,
+  signInWithMagicLink,
+  verifyOtpToken,
   signOut,
   getSession,
   getAccessToken,

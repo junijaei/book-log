@@ -174,6 +174,31 @@ export const LOGIN_LABELS = {
   ERROR_GENERIC: '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.',
 } as const;
 
+// Magic Link Labels
+export const MAGIC_LINK_LABELS = {
+  TAB_MAGIC: '이메일 링크',
+  TAB_PASSWORD: '비밀번호',
+  TITLE: '독서 기록에 오신 것을 환영합니다',
+  DESCRIPTION: '이메일로 로그인 링크를 받아 시작하세요. 가입도 동시에 진행됩니다.',
+  EMAIL_PLACEHOLDER: 'name@example.com',
+  SUBMIT: '로그인 링크 받기',
+  SUBMITTING: '전송 중...',
+  SENT_TITLE: '이메일을 확인하세요',
+  SENT_DESCRIPTION: (email: string) =>
+    `${email} 으로 로그인 링크를 보냈습니다. 이메일의 링크를 클릭하면 바로 입장됩니다.`,
+  SENT_RESEND: '다시 보내기',
+  SENT_CHANGE_EMAIL: '이메일 변경',
+  ERROR_GENERIC: '링크 전송에 실패했습니다. 잠시 후 다시 시도해주세요.',
+} as const;
+
+// Auth Callback Labels
+export const AUTH_CALLBACK_LABELS = {
+  LOADING: '로그인 중...',
+  ERROR_TITLE: '로그인에 실패했습니다',
+  ERROR_DESCRIPTION: '링크가 만료되었거나 이미 사용된 링크입니다. 다시 시도해주세요.',
+  GO_TO_LOGIN: '로그인 페이지로',
+} as const;
+
 // Helper function to get reading status label
 export function getReadingStatusLabel(status: ReadingStatus): string {
   return READING_STATUS_LABELS[status];

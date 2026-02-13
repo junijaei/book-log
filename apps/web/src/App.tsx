@@ -4,6 +4,7 @@ import { AuthGuard } from './components/auth-guard';
 import { Toaster } from './components/ui/sonner';
 import { AuthProvider } from './lib/auth/auth-provider';
 import { ThemeProvider } from './lib/theme-provider';
+import { AuthCallbackPage } from './pages/auth-callback';
 import { BookDetailPage } from './pages/book-detail';
 import { BookEditPage } from './pages/book-edit';
 import { BookNewPage } from './pages/book-new';
@@ -21,6 +22,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
             <Route
               path="/"
