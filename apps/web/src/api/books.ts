@@ -5,7 +5,7 @@
  * Endpoint: POST /functions/v1/reading-records
  */
 
-import type { CreateBookInput, CreateBookResponse } from '@/types';
+import type { AladinBook, CreateBookInput, CreateBookResponse } from '@/types';
 import { invokeEdgeFunction } from './edge-functions';
 import { ApiError } from './errors';
 
@@ -19,5 +19,31 @@ export async function createBook(input: CreateBookInput): Promise<CreateBookResp
   } catch (error) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(error instanceof Error ? error.message : 'Failed to create book');
+  }
+}
+
+export async function searchBooks(query: string): Promise<AladinBook[]> {
+  try {
+    const response = await invokeEdgeFunction<{ data: AladinBook[] }>('book-search', {
+      method: 'GET',
+      query: { query },
+    });
+    return response.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(error instanceof Error ? error.message : 'Failed to search books');
+  }
+}
+
+export async function lookupBook(isbn13: string): Promise<AladinBook> {
+  try {
+    const response = await invokeEdgeFunction<{ data: AladinBook }>('book-search', {
+      method: 'GET',
+      query: { isbn13 },
+    });
+    return response.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(error instanceof Error ? error.message : 'Failed to lookup book');
   }
 }
