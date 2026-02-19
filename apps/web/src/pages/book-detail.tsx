@@ -692,42 +692,44 @@ export function BookDetailPage() {
             </div>
           )}
 
-          {/* Review list — date + content row format */}
+          {/* Review list — content then date + actions row below */}
           {reviews.length > 0 ? (
             <div className="divide-y divide-border/30">
               {reviews.map(review => (
-                <article key={review.id} className="group flex gap-4 py-3">
-                  <time className="text-xs text-muted-foreground shrink-0 w-[5.5rem] pt-0.5 tabular-nums">
-                    {review.reviewed_at ?? '—'}
-                  </time>
-                  <p className="text-sm leading-relaxed flex-1 whitespace-pre-wrap">
+                <article key={review.id} className="group py-3">
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap mb-2">
                     {review.content}
                   </p>
-                  {isOwner && (
-                    <div className="flex gap-1 shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditingReview(review);
-                          setEditReviewContent(review.content);
-                        }}
-                      >
-                        {messages.common.buttons.edit}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setReviewToDelete(review);
-                          setDeleteReviewDialogOpen(true);
-                        }}
-                        disabled={deleteReviewMutation.isPending}
-                      >
-                        {messages.common.buttons.delete}
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex justify-between items-center">
+                    <time className="text-xs text-muted-foreground tabular-nums">
+                      {review.reviewed_at ?? '—'}
+                    </time>
+                    {isOwner && (
+                      <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingReview(review);
+                            setEditReviewContent(review.content);
+                          }}
+                        >
+                          {messages.common.buttons.edit}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setReviewToDelete(review);
+                            setDeleteReviewDialogOpen(true);
+                          }}
+                          disabled={deleteReviewMutation.isPending}
+                        >
+                          {messages.common.buttons.delete}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </article>
               ))}
             </div>
