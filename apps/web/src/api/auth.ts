@@ -111,6 +111,53 @@ export async function signInWithPassword(email: string, password: string): Promi
 }
 
 /**
+ * Signs in a user via Google OAuth (PKCE flow).
+ * Redirects to Google consent screen, then back to /auth/callback.
+ *
+ * @throws {ApiError} If the request fails
+ */
+export async function signInWithGoogle(): Promise<void> {
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      throw new ApiError(error.message, error.status, error.code, error);
+    }
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(error instanceof Error ? error.message : 'Google 로그인에 실패했습니다');
+  }
+}
+
+/**
+ * Updates the current user's password and marks has_password in metadata.
+ * Used when a magic-link user wants to add or change their password.
+ *
+ * @param password - The new password (min 6 characters)
+ * @throws {ApiError} If the update fails
+ */
+export async function updatePassword(password: string): Promise<void> {
+  try {
+    const { error } = await supabase.auth.updateUser({
+      password,
+      data: { has_password: true },
+    });
+
+    if (error) {
+      throw new ApiError(error.message, error.status, error.code, error);
+    }
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(error instanceof Error ? error.message : '비밀번호 설정에 실패했습니다');
+  }
+}
+
+/**
  * Signs out the current user and clears the session.
  *
  * @throws {ApiError} If sign out fails

@@ -7,6 +7,8 @@
 import {
   signInWithPassword as apiSignIn,
   signInWithMagicLink as apiSignInWithMagicLink,
+  signInWithGoogle as apiSignInWithGoogle,
+  updatePassword as apiUpdatePassword,
   signOut as apiSignOut,
   getSession,
   onAuthStateChange,
@@ -83,6 +85,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await apiSignInWithMagicLink(email);
   }, []);
 
+  const signInWithGoogle = useCallback(async () => {
+    await apiSignInWithGoogle();
+  }, []);
+
+  const updatePassword = useCallback(async (password: string) => {
+    await apiUpdatePassword(password);
+    // Refresh session so user metadata reflects has_password: true
+    const refreshed = await getSession();
+    if (refreshed) {
+      setSession(refreshed);
+      setUser(refreshed.user);
+    }
+  }, []);
+
   const signOut = useCallback(async () => {
     await apiSignOut();
     setSession(null);
@@ -95,6 +111,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loading,
     signIn,
     signInWithMagicLink,
+    signInWithGoogle,
+    updatePassword,
     signOut,
   };
 

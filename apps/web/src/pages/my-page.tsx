@@ -39,6 +39,7 @@ import {
   MESSAGES,
   MISC,
   PAGE_TITLES,
+  PASSWORD_SETUP_LABELS,
   PLACEHOLDERS,
 } from '@/lib/constants';
 import type { PublicProfile, UpdateProfilePayload } from '@/types';
@@ -98,10 +99,136 @@ export function MyPage() {
   );
 }
 
+// =============================================================================
+// PasswordDialog — 비밀번호 추가/변경 다이얼로그
+// =============================================================================
+
+interface PasswordDialogProps {
+  open: boolean;
+  onClose: () => void;
+  mode: 'add' | 'change';
+}
+
+function PasswordDialog({ open, onClose, mode }: PasswordDialogProps) {
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const { updatePassword } = useAuth();
+
+  const handleSave = async () => {
+    setError(null);
+
+    if (password.length < 6) {
+      setError(PASSWORD_SETUP_LABELS.MIN_LENGTH_ERROR);
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError(PASSWORD_SETUP_LABELS.MISMATCH_ERROR);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await updatePassword(password);
+      toast.success(PASSWORD_SETUP_LABELS.SUCCESS);
+      onClose();
+    } catch (err) {
+      console.error('Password update error:', err);
+      setError(err instanceof Error ? err.message : '비밀번호 설정에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 다이얼로그가 닫힐 때 초기화
+  useEffect(() => {
+    if (!open) {
+      setPassword('');
+      setConfirmPassword('');
+      setError(null);
+    }
+  }, [open]);
+
+  const title =
+    mode === 'add' ? PASSWORD_SETUP_LABELS.ADD_TITLE : PASSWORD_SETUP_LABELS.CHANGE_TITLE;
+  const description =
+    mode === 'add'
+      ? PASSWORD_SETUP_LABELS.ADD_DESCRIPTION
+      : PASSWORD_SETUP_LABELS.CHANGE_DESCRIPTION;
+
+  return (
+    <Dialog open={open} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-base">{title}</DialogTitle>
+          <DialogDescription className="text-sm">{description}</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 pt-1">
+          {error && (
+            <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>
+          )}
+
+          <div className="space-y-2">
+            <label htmlFor="new-pw" className="text-sm font-medium">
+              {PASSWORD_SETUP_LABELS.NEW_PASSWORD}
+            </label>
+            <Input
+              id="new-pw"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder={PASSWORD_SETUP_LABELS.PASSWORD_PLACEHOLDER}
+              disabled={saving}
+              autoFocus
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="confirm-pw" className="text-sm font-medium">
+              {PASSWORD_SETUP_LABELS.CONFIRM_PASSWORD}
+            </label>
+            <Input
+              id="confirm-pw"
+              type="password"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              placeholder={PASSWORD_SETUP_LABELS.CONFIRM_PLACEHOLDER}
+              disabled={saving}
+            />
+          </div>
+        </div>
+
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" className="flex-1" onClick={onClose} disabled={saving}>
+            {PASSWORD_SETUP_LABELS.CANCEL}
+          </Button>
+          <Button className="flex-1" onClick={handleSave} disabled={saving}>
+            {saving ? PASSWORD_SETUP_LABELS.SAVING : PASSWORD_SETUP_LABELS.SAVE}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// =============================================================================
+// ProfileSection
+// =============================================================================
+
 function ProfileSection() {
   const { data: profile, isLoading } = useProfile();
   const updateProfileMutation = useUpdateProfile();
   const [isEditing, setIsEditing] = useState(false);
+  const [passwordDialog, setPasswordDialog] = useState<{ open: boolean; mode: 'add' | 'change' }>({
+    open: false,
+    mode: 'add',
+  });
+
+  const { user } = useAuth();
+  const hasPassword = user?.user_metadata?.has_password === true;
 
   const { control, handleSubmit, reset } = useForm<UpdateProfilePayload>({
     defaultValues: {
@@ -261,9 +388,37 @@ function ProfileSection() {
                 {profile.bio && <p className="text-sm text-muted-foreground mt-1">{profile.bio}</p>}
               </div>
             </div>
+
+            {/* 비밀번호 관리 */}
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">{PASSWORD_SETUP_LABELS.NEW_PASSWORD}</p>
+                <p className="text-xs text-muted-foreground">
+                  {hasPassword
+                    ? '비밀번호가 설정되어 있습니다.'
+                    : '비밀번호가 설정되어 있지 않습니다.'}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setPasswordDialog({ open: true, mode: hasPassword ? 'change' : 'add' })
+                }
+              >
+                {hasPassword ? PASSWORD_SETUP_LABELS.CHANGE_BTN : PASSWORD_SETUP_LABELS.ADD_BTN}
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
+
+      <PasswordDialog
+        open={passwordDialog.open}
+        mode={passwordDialog.mode}
+        onClose={() => setPasswordDialog(prev => ({ ...prev, open: false }))}
+      />
     </Card>
   );
 }

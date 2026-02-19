@@ -1,5 +1,5 @@
-import { forwardRef, type HTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
+import { forwardRef, type HTMLAttributes } from 'react';
 
 export interface BadgeProps extends HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'secondary' | 'destructive' | 'outline';
@@ -11,7 +11,7 @@ const Badge = forwardRef<HTMLDivElement, BadgeProps>(
       <div
         ref={ref}
         className={cn(
-          'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+          'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 whitespace-nowrap',
           {
             'border-transparent bg-primary text-primary-foreground hover:bg-primary/80':
               variant === 'default',

@@ -172,6 +172,12 @@ export const LOGIN_LABELS = {
   SUBMIT: '로그인',
   SUBMITTING: '로그인 중...',
   ERROR_GENERIC: '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.',
+  OR_DIVIDER: '또는',
+  MAGIC_LINK_BTN: '이메일 링크로 로그인',
+  GOOGLE_BTN: 'Google로 로그인',
+  GOOGLE_LOADING: 'Google 연결 중...',
+  BACK_TO_PASSWORD: '← 비밀번호 로그인으로',
+  NO_PASSWORD_HINT: '비밀번호가 없으신가요? 이메일 링크 또는 Google 로그인을 이용하세요.',
 } as const;
 
 // Magic Link Labels
@@ -189,6 +195,31 @@ export const MAGIC_LINK_LABELS = {
   SENT_RESEND: '다시 보내기',
   SENT_CHANGE_EMAIL: '이메일 변경',
   ERROR_GENERIC: '링크 전송에 실패했습니다. 잠시 후 다시 시도해주세요.',
+} as const;
+
+// Password Setup Labels (after magic link login)
+export const PASSWORD_SETUP_LABELS = {
+  DIALOG_TITLE: '빠른 로그인을 위해 비밀번호를 설정하세요',
+  DIALOG_DESCRIPTION:
+    '비밀번호를 설정하면 다음 로그인부터 이메일과 비밀번호로 빠르게 접속할 수 있습니다.',
+  SET_NOW: '지금 설정',
+  LATER: '나중에 하기',
+  NEW_PASSWORD: '새 비밀번호',
+  CONFIRM_PASSWORD: '비밀번호 확인',
+  SAVE: '저장',
+  SAVING: '저장 중...',
+  CANCEL: '취소',
+  PASSWORD_PLACEHOLDER: '6자 이상 입력하세요',
+  CONFIRM_PLACEHOLDER: '비밀번호를 다시 입력하세요',
+  MISMATCH_ERROR: '비밀번호가 일치하지 않습니다.',
+  MIN_LENGTH_ERROR: '비밀번호는 6자 이상이어야 합니다.',
+  SUCCESS: '비밀번호가 설정되었습니다.',
+  CHANGE_TITLE: '비밀번호 변경',
+  ADD_TITLE: '비밀번호 추가',
+  CHANGE_BTN: '비밀번호 변경',
+  ADD_BTN: '비밀번호 추가',
+  CHANGE_DESCRIPTION: '새 비밀번호를 입력하세요.',
+  ADD_DESCRIPTION: '비밀번호를 추가하면 이메일과 비밀번호로도 로그인할 수 있습니다.',
 } as const;
 
 // Auth Callback Labels
