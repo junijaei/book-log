@@ -57,10 +57,9 @@ export type CreateQuoteInput = Pick<
 >;
 
 /** Input for updating a quote (includes id) */
-export type UpdateQuoteInput = Pick<
-  TablesUpdate<'quotes'>,
-  'text' | 'page_number' | 'noted_at'
-> & { id: string };
+export type UpdateQuoteInput = Pick<TablesUpdate<'quotes'>, 'text' | 'page_number' | 'noted_at'> & {
+  id: string;
+};
 
 /** Input for deleting a reading record (ID passed as query param) */
 export interface DeleteReadingRecordInput {
@@ -194,6 +193,26 @@ export interface FriendUnblockResponse {
 // =============================================================================
 // Profile API Types — UpdateProfilePayload re-exported from @book-log/database
 // =============================================================================
+
+// =============================================================================
+// Book Search (Aladin Open API) Types
+// =============================================================================
+
+export interface AladinBook {
+  title: string;
+  author: string;
+  publisher: string;
+  cover: string;
+  isbn13: string;
+  totalPages: number | null;
+  pubDate: string;
+  description: string;
+  categoryName: string;
+}
+
+export interface BookSearchResponse {
+  data: AladinBook[];
+}
 
 // =============================================================================
 // Error Types

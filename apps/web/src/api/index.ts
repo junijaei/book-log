@@ -17,7 +17,7 @@ export {
 } from './auth';
 
 // Books
-export { createBook } from './books';
+export { createBook, searchBooks, lookupBook } from './books';
 
 // Reading Records
 export {

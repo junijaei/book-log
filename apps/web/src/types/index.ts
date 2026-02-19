@@ -55,6 +55,8 @@ export type {
   UpdateReviewInput,
   DeleteReviewResponse,
   UpsertReviewData,
+  AladinBook,
+  BookSearchResponse,
 } from './api';
 
 // Filter/sort/pagination types (from @book-log/database via ./filters)

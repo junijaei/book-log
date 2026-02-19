@@ -51,6 +51,11 @@ export const BUTTON_LABELS = {
   REMOVE_FRIEND: '친구 삭제',
   CANCEL_REQUEST: '요청 취소',
   LOAD_MORE: '더 보기',
+  MANUAL_INPUT: '직접 입력하기',
+  NEXT: '다음',
+  SEARCH_AGAIN: '다시 검색',
+  SELECT: '선택',
+  EDIT_BOOK: '수정하기',
 } as const;
 
 // Field Labels
@@ -82,6 +87,7 @@ export const FIELD_LABELS = {
 // Placeholders
 export const PLACEHOLDERS = {
   SEARCH: '제목이나 저자로 검색...',
+  BOOK_SEARCH: '책 제목을 입력하세요...',
   COVER_IMAGE_URL: 'https://example.com/cover.jpg',
   QUOTE_TEXT: '인용구 텍스트...',
   PAGE_NUMBER: '페이지',
@@ -129,6 +135,9 @@ export const MESSAGES = {
   NO_EDIT_PERMISSION: '본인의 독서 기록만 편집할 수 있습니다.',
   NO_SEARCH_RESULTS: '검색 결과가 없습니다.',
   SEARCH_MIN_LENGTH: '2자 이상 입력하세요.',
+  BOOK_SEARCH_MIN_LENGTH: '2글자 이상 입력하면 검색이 시작됩니다.',
+  BOOK_SEARCH_FAILED: '도서 검색에 실패했습니다.',
+  BOOK_SEARCH_NO_RESULTS: '검색 결과가 없습니다. 다른 제목으로 검색해 보세요.',
   QUOTE_ADDED: '인용구가 추가되었습니다.',
   SAVED_SUCCESSFULLY: '저장되었습니다.',
   UNSAVED_CHANGES_WARNING: '변경사항이 저장되지 않습니다. 나가시겠습니까?',
@@ -149,6 +158,10 @@ export const FILTER_LABELS = {
 export const MISC = {
   PAGES_UNIT: '페이지',
   BOOK_DETAILS: '도서 정보',
+  BOOK_SEARCH: '도서 검색',
+  SEARCH_RESULT_HINT: '원하는 책을 선택하세요',
+  SELECTED_BOOK: '선택된 도서',
+  BOOK_CONFIRM_TITLE: '이 책을 추가하시겠습니까?',
   READING_LOG: '독서 기록',
   ADD_NEW_QUOTE: '새 인용구 추가',
   EDIT_QUOTE: '인용구 수정',
