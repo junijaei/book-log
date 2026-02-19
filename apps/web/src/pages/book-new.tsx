@@ -6,14 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { useBookLookup, useCreateBook, useIsMobile } from '@/hooks';
-import {
-  BUTTON_LABELS,
-  FIELD_LABELS,
-  MESSAGES,
-  MISC,
-  PAGE_TITLES,
-  PLACEHOLDERS,
-} from '@/lib/constants';
+import { messages } from '@/constants/messages';
 import type { AladinBook, BookFormData } from '@/types';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import { useState } from 'react';
@@ -31,7 +24,7 @@ function SelectedBookPreview({ book }: { book: AladinBook }) {
           <img src={book.cover} alt={book.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs text-center p-1">
-            {MESSAGES.NO_COVER}
+            {messages.books.details.noCover}
           </div>
         )}
       </div>
@@ -41,7 +34,7 @@ function SelectedBookPreview({ book }: { book: AladinBook }) {
         <p className="text-xs text-muted-foreground">{book.publisher}</p>
         {book.totalPages && (
           <p className="text-xs text-muted-foreground">
-            {book.totalPages} {MISC.PAGES_UNIT}
+            {book.totalPages} {messages.books.details.pagesUnit}
           </p>
         )}
       </div>
@@ -87,14 +80,14 @@ function BookForm({
         {showSearch && (
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground font-normal mb-2">
-              {MISC.BOOK_SEARCH}
+              {messages.books.search.title}
             </CardTitle>
             <BookSearchInput onSelect={handleBookSelect} />
           </CardHeader>
         )}
 
         <CardHeader className={showSearch ? 'pt-4 pb-4' : 'pb-4'}>
-          <CardTitle className="text-base">{MISC.BOOK_DETAILS}</CardTitle>
+          <CardTitle className="text-base">{messages.books.details.bookInfo}</CardTitle>
         </CardHeader>
 
         <CardContent>
@@ -109,12 +102,14 @@ function BookForm({
               <Controller
                 name="title"
                 control={control}
-                rules={{ required: MESSAGES.TITLE_AUTHOR_REQUIRED }}
+                rules={{ required: messages.books.messages.titleAuthorRequired }}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="title">
-                      {FIELD_LABELS.TITLE}{' '}
-                      <span className="text-destructive">{MESSAGES.REQUIRED_FIELD}</span>
+                      {messages.books.fields.title}{' '}
+                      <span className="text-destructive">
+                        {messages.common.states.requiredField}
+                      </span>
                     </FieldLabel>
                     <Input
                       {...field}
@@ -130,12 +125,14 @@ function BookForm({
               <Controller
                 name="author"
                 control={control}
-                rules={{ required: MESSAGES.TITLE_AUTHOR_REQUIRED }}
+                rules={{ required: messages.books.messages.titleAuthorRequired }}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="author">
-                      {FIELD_LABELS.AUTHOR}{' '}
-                      <span className="text-destructive">{MESSAGES.REQUIRED_FIELD}</span>
+                      {messages.books.fields.author}{' '}
+                      <span className="text-destructive">
+                        {messages.common.states.requiredField}
+                      </span>
                     </FieldLabel>
                     <Input
                       {...field}
@@ -156,13 +153,13 @@ function BookForm({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="cover_image_url">
-                      {FIELD_LABELS.COVER_IMAGE_URL}
+                      {messages.books.fields.coverImageUrl}
                     </FieldLabel>
                     <Input
                       {...field}
                       id="cover_image_url"
                       type="url"
-                      placeholder={PLACEHOLDERS.COVER_IMAGE_URL}
+                      placeholder={messages.books.placeholders.coverImageUrl}
                       aria-invalid={fieldState.invalid}
                       autoComplete="off"
                     />
@@ -180,7 +177,9 @@ function BookForm({
                 }}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="total_pages">{FIELD_LABELS.TOTAL_PAGES}</FieldLabel>
+                    <FieldLabel htmlFor="total_pages">
+                      {messages.books.fields.totalPages}
+                    </FieldLabel>
                     <Input
                       {...field}
                       id="total_pages"
@@ -196,7 +195,7 @@ function BookForm({
 
             <div className="pt-4">
               <Button type="submit" className="w-full" disabled={isPending}>
-                {isPending ? BUTTON_LABELS.SAVING : BUTTON_LABELS.SAVE}
+                {isPending ? messages.common.buttons.saving : messages.common.buttons.save}
               </Button>
             </div>
           </FieldGroup>
@@ -231,21 +230,7 @@ function MobileView() {
       });
       navigate(`/books/${response.reading_log.id}`);
     } catch {
-      toast.error(MESSAGES.FAILED_TO_CREATE);
-    }
-  }
-
-  async function handleSubmitFromForm(data: BookFormData) {
-    try {
-      const response = await createBookMutation.mutateAsync({
-        title: data.title,
-        author: data.author,
-        cover_image_url: data.cover_image_url || null,
-        total_pages: data.total_pages ? parseInt(data.total_pages) : null,
-      });
-      navigate(`/books/${response.reading_log.id}`);
-    } catch {
-      toast.error(MESSAGES.FAILED_TO_CREATE);
+      toast.error(messages.common.errors.failedToCreate);
     }
   }
 
@@ -273,18 +258,18 @@ function MobileView() {
                   type="button"
                   onClick={handleBack}
                   className="p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={BUTTON_LABELS.BACK}
+                  aria-label={messages.common.buttons.back}
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
               )}
-              <h1 className="text-xl font-bold">{PAGE_TITLES.BOOK_NEW}</h1>
+              <h1 className="text-xl font-bold">{messages.books.pages.new}</h1>
             </div>
             <div className="flex gap-2 items-center">
               <ThemeToggle />
               <Link to="/">
                 <Button variant="outline" size="sm">
-                  {BUTTON_LABELS.CANCEL}
+                  {messages.common.buttons.cancel}
                 </Button>
               </Link>
             </div>
@@ -295,7 +280,7 @@ function MobileView() {
       <main className="flex-1 container mx-auto px-4 py-6 max-w-2xl flex flex-col">
         {step === 'search' && (
           <div className="flex flex-col flex-1 gap-4">
-            <p className="text-sm text-muted-foreground">{MISC.SEARCH_RESULT_HINT}</p>
+            <p className="text-sm text-muted-foreground">{messages.books.search.resultHint}</p>
             <BookSearchInput onSelect={handleSearchSelect} autoFocus />
             <div className="flex-1" />
             <div className="flex justify-end">
@@ -304,7 +289,7 @@ function MobileView() {
                 onClick={() => setStep('form')}
                 className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
               >
-                {BUTTON_LABELS.MANUAL_INPUT}
+                {messages.books.buttons.manualInput}
               </button>
             </div>
           </div>
@@ -332,7 +317,7 @@ function MobileView() {
                   <p className="text-sm text-muted-foreground animate-pulse">페이지 조회 중...</p>
                 ) : resolvedBook.totalPages ? (
                   <p className="text-sm text-muted-foreground">
-                    {resolvedBook.totalPages} {MISC.PAGES_UNIT}
+                    {resolvedBook.totalPages} {messages.books.details.pagesUnit}
                   </p>
                 ) : null}
               </div>
@@ -344,7 +329,9 @@ function MobileView() {
                 disabled={createBookMutation.isPending || isLookingUp}
                 className="w-full"
               >
-                {createBookMutation.isPending ? BUTTON_LABELS.SAVING : BUTTON_LABELS.SAVE}
+                {createBookMutation.isPending
+                  ? messages.common.buttons.saving
+                  : messages.common.buttons.save}
               </Button>
               <Button
                 variant="ghost"
@@ -352,7 +339,7 @@ function MobileView() {
                 disabled={createBookMutation.isPending}
                 className="w-full"
               >
-                {BUTTON_LABELS.EDIT_BOOK}
+                {messages.books.buttons.editBook}
               </Button>
             </div>
           </div>
@@ -385,7 +372,7 @@ function DesktopView() {
       });
       navigate(`/books/${response.reading_log.id}`);
     } catch {
-      toast.error(MESSAGES.FAILED_TO_CREATE);
+      toast.error(messages.common.errors.failedToCreate);
     }
   }
 
@@ -394,12 +381,12 @@ function DesktopView() {
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
         <div className="container mx-auto px-4 py-3 max-w-2xl">
           <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold">{PAGE_TITLES.BOOK_NEW}</h1>
+            <h1 className="text-xl font-bold">{messages.books.pages.new}</h1>
             <div className="flex gap-2 items-center">
               <ThemeToggle />
               <Link to="/">
                 <Button variant="outline" size="sm">
-                  {BUTTON_LABELS.CANCEL}
+                  {messages.common.buttons.cancel}
                 </Button>
               </Link>
             </div>

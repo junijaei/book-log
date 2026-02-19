@@ -1,12 +1,12 @@
-import { NAV_LABELS } from '@/lib/constants';
+import { messages } from '@/constants/messages';
 import { cn } from '@/lib/utils';
 import { BookOpen, Rss, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const NAV_ITEMS = [
-  { to: '/', label: NAV_LABELS.MY_BOOKS, icon: BookOpen },
-  { to: '/feed', label: NAV_LABELS.FEED, icon: Rss },
-  { to: '/mypage', label: NAV_LABELS.MY_PAGE, icon: User },
+  { to: '/', label: messages.common.navigation.myBooks, icon: BookOpen },
+  { to: '/feed', label: messages.common.navigation.feed, icon: Rss },
+  { to: '/mypage', label: messages.common.navigation.myPage, icon: User },
 ] as const;
 
 export function BottomNav() {

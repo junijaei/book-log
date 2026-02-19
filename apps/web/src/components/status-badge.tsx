@@ -1,4 +1,4 @@
-import { getReadingStatusLabel } from '@/lib/constants';
+import { messages } from '@/constants/messages';
 import type { ReadingStatus } from '@/types';
 import { Badge } from './ui/badge';
 
@@ -14,5 +14,5 @@ const statusVariants: Record<ReadingStatus, 'default' | 'secondary' | 'destructi
 };
 
 export function StatusBadge({ status }: StatusBadgeProps) {
-  return <Badge variant={statusVariants[status]}>{getReadingStatusLabel(status)}</Badge>;
+  return <Badge variant={statusVariants[status]}>{messages.books.status[status]}</Badge>;
 }

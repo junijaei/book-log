@@ -25,7 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/use-auth';
-import { AUTH_CALLBACK_LABELS, PASSWORD_SETUP_LABELS } from '@/lib/constants';
+import { messages } from '@/constants/messages';
 import { BookOpen, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -78,22 +78,22 @@ function SetPasswordDialog({ open, onSkip, onSaved }: SetPasswordDialogProps) {
     setError(null);
 
     if (password.length < 6) {
-      setError(PASSWORD_SETUP_LABELS.MIN_LENGTH_ERROR);
+      setError(messages.auth.errors.passwordTooShort);
       return;
     }
     if (password !== confirmPassword) {
-      setError(PASSWORD_SETUP_LABELS.MISMATCH_ERROR);
+      setError(messages.auth.errors.passwordMismatch);
       return;
     }
 
     setSaving(true);
     try {
       await updatePassword(password);
-      toast.success(PASSWORD_SETUP_LABELS.SUCCESS);
+      toast.success(messages.auth.success.passwordSet);
       onSaved();
     } catch (err) {
       console.error('Password update error:', err);
-      setError(err instanceof Error ? err.message : '비밀번호 설정에 실패했습니다.');
+      setError(err instanceof Error ? err.message : messages.auth.errors.passwordSetupFailed);
     } finally {
       setSaving(false);
     }
@@ -114,20 +114,20 @@ function SetPasswordDialog({ open, onSkip, onSaved }: SetPasswordDialogProps) {
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-base leading-snug">
-            {PASSWORD_SETUP_LABELS.DIALOG_TITLE}
+            {messages.auth.passwordSetup.dialogTitle}
           </DialogTitle>
           <DialogDescription className="text-sm">
-            {PASSWORD_SETUP_LABELS.DIALOG_DESCRIPTION}
+            {messages.auth.passwordSetup.dialogDescription}
           </DialogDescription>
         </DialogHeader>
 
         {!showForm ? (
           <DialogFooter className="flex-col sm:flex-row gap-2 pt-2">
             <Button variant="outline" className="flex-1" onClick={onSkip}>
-              {PASSWORD_SETUP_LABELS.LATER}
+              {messages.auth.passwordSetup.laterButton}
             </Button>
             <Button className="flex-1" onClick={() => setShowForm(true)}>
-              {PASSWORD_SETUP_LABELS.SET_NOW}
+              {messages.auth.passwordSetup.setNowButton}
             </Button>
           </DialogFooter>
         ) : (
@@ -139,26 +139,28 @@ function SetPasswordDialog({ open, onSkip, onSaved }: SetPasswordDialogProps) {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="new-password">{PASSWORD_SETUP_LABELS.NEW_PASSWORD}</Label>
+              <Label htmlFor="new-password">{messages.auth.passwordSetup.newPasswordLabel}</Label>
               <Input
                 id="new-password"
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder={PASSWORD_SETUP_LABELS.PASSWORD_PLACEHOLDER}
+                placeholder={messages.auth.passwordSetup.passwordPlaceholder}
                 disabled={saving}
                 autoFocus
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirm-password">{PASSWORD_SETUP_LABELS.CONFIRM_PASSWORD}</Label>
+              <Label htmlFor="confirm-password">
+                {messages.auth.passwordSetup.confirmPasswordLabel}
+              </Label>
               <Input
                 id="confirm-password"
                 type="password"
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
-                placeholder={PASSWORD_SETUP_LABELS.CONFIRM_PLACEHOLDER}
+                placeholder={messages.auth.passwordSetup.confirmPlaceholder}
                 disabled={saving}
               />
             </div>
@@ -170,10 +172,12 @@ function SetPasswordDialog({ open, onSkip, onSaved }: SetPasswordDialogProps) {
                 onClick={() => setShowForm(false)}
                 disabled={saving}
               >
-                {PASSWORD_SETUP_LABELS.CANCEL}
+                {messages.auth.passwordSetup.cancelButton}
               </Button>
               <Button className="flex-1" onClick={handleSave} disabled={saving}>
-                {saving ? PASSWORD_SETUP_LABELS.SAVING : PASSWORD_SETUP_LABELS.SAVE}
+                {saving
+                  ? messages.auth.passwordSetup.saving
+                  : messages.auth.passwordSetup.saveButton}
               </Button>
             </DialogFooter>
           </div>
@@ -211,7 +215,7 @@ export function AuthCallbackPage() {
         .catch((err: unknown) => {
           console.error('[AuthCallback] verifyOtpToken failed:', err);
           setErrorMessage(
-            err instanceof Error ? err.message : AUTH_CALLBACK_LABELS.ERROR_DESCRIPTION
+            err instanceof Error ? err.message : messages.auth.callback.errorDescription
           );
           setState('error');
         });
@@ -261,13 +265,13 @@ export function AuthCallbackPage() {
           <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
             <BookOpen className="w-6 h-6 text-destructive" />
           </div>
-          <h1 className="text-xl font-semibold">{AUTH_CALLBACK_LABELS.ERROR_TITLE}</h1>
+          <h1 className="text-xl font-semibold">{messages.auth.callback.errorTitle}</h1>
           <p className="text-sm text-muted-foreground">
-            {errorMessage ?? AUTH_CALLBACK_LABELS.ERROR_DESCRIPTION}
+            {errorMessage ?? messages.auth.callback.errorDescription}
           </p>
         </div>
         <Button variant="outline" onClick={() => navigate('/login', { replace: true })}>
-          {AUTH_CALLBACK_LABELS.GO_TO_LOGIN}
+          {messages.auth.callback.goToLoginButton}
         </Button>
       </div>
     );
@@ -277,7 +281,7 @@ export function AuthCallbackPage() {
     <>
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">{AUTH_CALLBACK_LABELS.LOADING}</p>
+        <p className="text-sm text-muted-foreground">{messages.auth.callback.loading}</p>
       </div>
 
       <SetPasswordDialog

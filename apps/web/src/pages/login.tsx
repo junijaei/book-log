@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/use-auth';
-import { LOGIN_LABELS, MAGIC_LINK_LABELS } from '@/lib/constants';
+import { messages } from '@/constants/messages';
 import { Mail, Send } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useState, type FormEvent } from 'react';
@@ -74,7 +74,7 @@ function MagicLinkForm({ onBack }: MagicLinkFormProps) {
       setSent(true);
     } catch (err) {
       console.error('Magic link error:', err);
-      setError(err instanceof Error ? err.message : MAGIC_LINK_LABELS.ERROR_GENERIC);
+      setError(err instanceof Error ? err.message : messages.auth.errors.magicLinkFailed);
     } finally {
       setLoading(false);
     }
@@ -87,9 +87,9 @@ function MagicLinkForm({ onBack }: MagicLinkFormProps) {
           <Send className="w-7 h-7 text-primary" />
         </div>
         <div className="space-y-1.5">
-          <p className="font-semibold text-base">{MAGIC_LINK_LABELS.SENT_TITLE}</p>
+          <p className="font-semibold text-base">{messages.auth.magicLink.sentTitle}</p>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            {MAGIC_LINK_LABELS.SENT_DESCRIPTION(email)}
+            {messages.auth.magicLink.sentDescription(email)}
           </p>
         </div>
         <div className="flex gap-2 w-full">
@@ -102,14 +102,14 @@ function MagicLinkForm({ onBack }: MagicLinkFormProps) {
               setEmail('');
             }}
           >
-            {MAGIC_LINK_LABELS.SENT_CHANGE_EMAIL}
+            {messages.auth.magicLink.sentChangeEmailButton}
           </Button>
           <Button variant="outline" size="sm" className="flex-1" onClick={() => setSent(false)}>
-            {MAGIC_LINK_LABELS.SENT_RESEND}
+            {messages.auth.magicLink.sentResendButton}
           </Button>
         </div>
         <Button variant="ghost" size="sm" className="w-full" onClick={onBack}>
-          {LOGIN_LABELS.BACK_TO_PASSWORD}
+          {messages.auth.login.backToPassword}
         </Button>
       </div>
     );
@@ -123,13 +123,13 @@ function MagicLinkForm({ onBack }: MagicLinkFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="magic-email">{LOGIN_LABELS.EMAIL}</Label>
+          <Label htmlFor="magic-email">{messages.auth.login.emailLabel}</Label>
           <Input
             id="magic-email"
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            placeholder={MAGIC_LINK_LABELS.EMAIL_PLACEHOLDER}
+            placeholder={messages.auth.magicLink.emailPlaceholder}
             required
             autoComplete="email"
             disabled={loading}
@@ -139,16 +139,16 @@ function MagicLinkForm({ onBack }: MagicLinkFormProps) {
 
         <Button type="submit" className="w-full" disabled={loading}>
           <Mail className="w-4 h-4 mr-2" />
-          {loading ? MAGIC_LINK_LABELS.SUBMITTING : MAGIC_LINK_LABELS.SUBMIT}
+          {loading ? messages.auth.magicLink.submitting : messages.auth.magicLink.submitButton}
         </Button>
       </form>
 
       <p className="text-xs text-center text-muted-foreground">
-        계정이 없으면 자동으로 가입됩니다.
+        {messages.auth.login.autoSignupHint}
       </p>
 
       <Button variant="ghost" size="sm" className="w-full" onClick={onBack}>
-        {LOGIN_LABELS.BACK_TO_PASSWORD}
+        {messages.auth.login.backToPassword}
       </Button>
     </div>
   );
@@ -180,7 +180,7 @@ function PasswordForm() {
       navigate(from, { replace: true });
     } catch (err) {
       console.error('Login error:', err);
-      setError(err instanceof Error ? err.message : LOGIN_LABELS.ERROR_GENERIC);
+      setError(err instanceof Error ? err.message : messages.auth.errors.loginFailed);
     } finally {
       setLoading(false);
     }
@@ -193,7 +193,7 @@ function PasswordForm() {
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="password-email">{LOGIN_LABELS.EMAIL}</Label>
+        <Label htmlFor="password-email">{messages.auth.login.emailLabel}</Label>
         <Input
           id="password-email"
           type="email"
@@ -207,7 +207,7 @@ function PasswordForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">{LOGIN_LABELS.PASSWORD}</Label>
+        <Label htmlFor="password">{messages.auth.login.passwordLabel}</Label>
         <Input
           id="password"
           type="password"
@@ -221,7 +221,7 @@ function PasswordForm() {
       </div>
 
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? LOGIN_LABELS.SUBMITTING : LOGIN_LABELS.SUBMIT}
+        {loading ? messages.auth.login.submitting : messages.auth.login.submitButton}
       </Button>
     </form>
   );
@@ -249,7 +249,7 @@ export function LoginPage() {
       // signInWithOAuth은 Google 페이지로 리다이렉트하므로 이후 코드는 실행되지 않음
     } catch (err) {
       console.error('Google login error:', err);
-      setGoogleError(err instanceof Error ? err.message : 'Google 로그인에 실패했습니다.');
+      setGoogleError(err instanceof Error ? err.message : messages.auth.errors.googleLoginFailed);
       setGoogleLoading(false);
     }
   };
@@ -280,9 +280,9 @@ export function LoginPage() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-center">{LOGIN_LABELS.TITLE}</CardTitle>
+            <CardTitle className="text-lg text-center">{messages.auth.login.title}</CardTitle>
             <CardDescription className="text-center text-sm">
-              {LOGIN_LABELS.DESCRIPTION}
+              {messages.auth.login.description}
             </CardDescription>
           </CardHeader>
 
@@ -303,7 +303,7 @@ export function LoginPage() {
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
                     <span className="bg-card px-2 text-muted-foreground">
-                      {LOGIN_LABELS.OR_DIVIDER}
+                      {messages.auth.login.orDivider}
                     </span>
                   </div>
                 </div>
@@ -324,7 +324,9 @@ export function LoginPage() {
                   >
                     <GoogleIcon />
                     <span className="ml-2">
-                      {googleLoading ? LOGIN_LABELS.GOOGLE_LOADING : LOGIN_LABELS.GOOGLE_BTN}
+                      {googleLoading
+                        ? messages.auth.login.googleLoading
+                        : messages.auth.login.googleButton}
                     </span>
                   </Button>
                   <Button
@@ -334,7 +336,7 @@ export function LoginPage() {
                     onClick={() => setView('magic-link')}
                   >
                     <Mail className="w-4 h-4 mr-2" />
-                    {LOGIN_LABELS.MAGIC_LINK_BTN}
+                    {messages.auth.login.magicLinkButton}
                   </Button>
                 </div>
               </>

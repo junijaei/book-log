@@ -2,15 +2,15 @@ import { BookCardList } from '@/components/book-card-list';
 import { EmptyState } from '@/components/empty-state';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useInfiniteScroll, useReadingRecords } from '@/hooks';
-import { FILTER_LABELS, MESSAGES, PAGE_TITLES } from '@/lib/constants';
+import { messages } from '@/constants/messages';
 import { cn } from '@/lib/utils';
 import type { FeedScope, ReadingRecordFilters, ReadingRecordSort } from '@/types';
 import { Rss } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 const SCOPE_OPTIONS: { value: FeedScope; label: string }[] = [
-  { value: 'all', label: FILTER_LABELS.SCOPE_ALL },
-  { value: 'friends', label: FILTER_LABELS.SCOPE_FRIENDS },
+  { value: 'all', label: messages.books.filters.all },
+  { value: 'friends', label: '친구' },
 ];
 
 export function FeedPage() {
@@ -41,7 +41,7 @@ export function FeedPage() {
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
         <div className="container mx-auto px-4 py-3 max-w-6xl">
           <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold">{PAGE_TITLES.FEED}</h1>
+            <h1 className="text-xl font-bold">{messages.books.pages.feed}</h1>
             <ThemeToggle />
           </div>
 
@@ -72,7 +72,10 @@ export function FeedPage() {
           observerTarget={observerTarget}
           showAuthor
           emptyState={
-            <EmptyState icon={<Rss size={48} strokeWidth={1} />} message={MESSAGES.NO_FEED_BOOKS} />
+            <EmptyState
+              icon={<Rss size={48} strokeWidth={1} />}
+              message={messages.books.messages.noFeedBooks}
+            />
           }
         />
       </main>

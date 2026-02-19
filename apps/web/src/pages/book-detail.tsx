@@ -17,14 +17,8 @@ import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateQuote, useDeleteQuote, useReadingRecord, useUpdateQuote } from '@/hooks';
-import {
-  BUTTON_LABELS,
-  FIELD_LABELS,
-  MESSAGES,
-  MISC,
-  PLACEHOLDERS,
-  renderRatingStars,
-} from '@/lib/constants';
+import { messages } from '@/constants/messages';
+import { renderRatingStars } from '@/lib/constants';
 import type { Quote } from '@/types';
 import { Quote as QuoteIcon } from 'lucide-react';
 import { useState } from 'react';
@@ -66,10 +60,10 @@ export function BookDetailPage() {
       setNewQuoteText('');
       setNewQuotePage('');
       setShowAddQuote(false);
-      toast.success(MESSAGES.QUOTE_ADDED);
+      toast.success(messages.books.success.quoteAdded);
     } catch (error) {
       console.error('Failed to add quote:', error);
-      toast.error(MESSAGES.FAILED_TO_CREATE);
+      toast.error(messages.common.errors.failedToCreate);
     }
   };
 
@@ -92,7 +86,7 @@ export function BookDetailPage() {
       setEditingQuote(null);
     } catch (error) {
       console.error('Failed to update quote:', error);
-      toast.error(MESSAGES.FAILED_TO_SAVE);
+      toast.error(messages.common.errors.failedToSave);
     }
   };
 
@@ -111,7 +105,7 @@ export function BookDetailPage() {
       setQuoteToDelete(null);
     } catch (error) {
       console.error('Failed to delete quote:', error);
-      toast.error(MESSAGES.FAILED_TO_DELETE);
+      toast.error(messages.common.errors.failedToDelete);
     }
   };
 
@@ -123,7 +117,7 @@ export function BookDetailPage() {
             <div className="flex justify-between items-center">
               <Link to="/">
                 <Button variant="ghost" size="sm">
-                  ← {BUTTON_LABELS.BACK}
+                  ← {messages.common.buttons.back}
                 </Button>
               </Link>
               <div className="flex gap-2">
@@ -143,10 +137,10 @@ export function BookDetailPage() {
     return (
       <div className="min-h-screen">
         <div className="text-center py-12">
-          <p className="text-sm text-muted-foreground mb-4">{MESSAGES.BOOK_NOT_FOUND}</p>
+          <p className="text-sm text-muted-foreground mb-4">{messages.books.messages.notFound}</p>
           <Link to="/">
             <Button variant="outline" size="sm">
-              {BUTTON_LABELS.BACK_TO_LIST}
+              {messages.books.buttons.backToList}
             </Button>
           </Link>
         </div>
@@ -164,14 +158,14 @@ export function BookDetailPage() {
           <div className="flex justify-between items-center">
             <Link to="/">
               <Button variant="ghost" size="sm">
-                ← {BUTTON_LABELS.BACK}
+                ← {messages.common.buttons.back}
               </Button>
             </Link>
             <div className="flex gap-2">
               <ThemeToggle />
               {isOwner && (
                 <Link to={`/books/${id}/edit`}>
-                  <Button size="sm">{BUTTON_LABELS.EDIT}</Button>
+                  <Button size="sm">{messages.common.buttons.edit}</Button>
                 </Link>
               )}
             </div>
@@ -226,12 +220,12 @@ export function BookDetailPage() {
         <section>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold">
-              {FIELD_LABELS.QUOTES}
+              {messages.books.fields.quotes}
               <span className="text-muted-foreground font-normal ml-2">({quotes.length})</span>
             </h2>
             {isOwner && (
               <Button variant="outline" size="sm" onClick={() => setShowAddQuote(!showAddQuote)}>
-                {showAddQuote ? BUTTON_LABELS.CANCEL : BUTTON_LABELS.ADD_QUOTE}
+                {showAddQuote ? messages.common.buttons.cancel : messages.books.buttons.addQuote}
               </Button>
             )}
           </div>
@@ -239,10 +233,10 @@ export function BookDetailPage() {
           {/* Add quote form */}
           {showAddQuote && (
             <div className="mb-8 p-4 border rounded-lg bg-muted/20">
-              <h4 className="font-medium text-sm mb-3">{MISC.ADD_NEW_QUOTE}</h4>
+              <h4 className="font-medium text-sm mb-3">{messages.books.quotes.addNew}</h4>
               <div className="space-y-3">
                 <Textarea
-                  placeholder={PLACEHOLDERS.QUOTE_TEXT}
+                  placeholder={messages.books.placeholders.quoteText}
                   value={newQuoteText}
                   onChange={e => setNewQuoteText(e.target.value)}
                   rows={4}
@@ -251,7 +245,7 @@ export function BookDetailPage() {
                 <div className="flex gap-2 items-center">
                   <Input
                     type="number"
-                    placeholder={PLACEHOLDERS.PAGE_NUMBER}
+                    placeholder={messages.books.placeholders.pageNumber}
                     value={newQuotePage}
                     onChange={e => setNewQuotePage(e.target.value)}
                     className="w-28"
@@ -263,7 +257,9 @@ export function BookDetailPage() {
                       !newQuoteText.trim() || !newQuotePage || createQuoteMutation.isPending
                     }
                   >
-                    {createQuoteMutation.isPending ? MESSAGES.LOADING : BUTTON_LABELS.ADD}
+                    {createQuoteMutation.isPending
+                      ? messages.common.states.loading
+                      : messages.common.buttons.add}
                   </Button>
                 </div>
               </div>
@@ -290,7 +286,7 @@ export function BookDetailPage() {
                     {isOwner && (
                       <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="sm" onClick={() => openEditDialog(quote)}>
-                          {BUTTON_LABELS.EDIT}
+                          {messages.common.buttons.edit}
                         </Button>
                         <Button
                           variant="ghost"
@@ -298,7 +294,7 @@ export function BookDetailPage() {
                           onClick={() => openDeleteDialog(quote)}
                           disabled={deleteQuoteMutation.isPending}
                         >
-                          {BUTTON_LABELS.DELETE}
+                          {messages.common.buttons.delete}
                         </Button>
                       </div>
                     )}
@@ -310,7 +306,7 @@ export function BookDetailPage() {
             !showAddQuote && (
               <EmptyState
                 icon={<QuoteIcon size={48} strokeWidth={1} />}
-                message={MESSAGES.NO_QUOTES}
+                message={messages.books.quotes.empty}
               />
             )
           )}
@@ -320,11 +316,11 @@ export function BookDetailPage() {
       <Dialog open={!!editingQuote} onOpenChange={open => !open && setEditingQuote(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-base">{MISC.EDIT_QUOTE}</DialogTitle>
+            <DialogTitle className="text-base">{messages.books.quotes.edit}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-3">
             <Field>
-              <FieldLabel htmlFor="edit-quote-text">{FIELD_LABELS.QUOTE_TEXT}</FieldLabel>
+              <FieldLabel htmlFor="edit-quote-text">{messages.books.fields.quoteText}</FieldLabel>
               <Textarea
                 id="edit-quote-text"
                 value={editQuoteText}
@@ -334,7 +330,7 @@ export function BookDetailPage() {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="edit-quote-page">{FIELD_LABELS.PAGE_NUMBER}</FieldLabel>
+              <FieldLabel htmlFor="edit-quote-page">{messages.books.fields.pageNumber}</FieldLabel>
               <Input
                 id="edit-quote-page"
                 type="number"
@@ -351,14 +347,16 @@ export function BookDetailPage() {
               onClick={() => setEditingQuote(null)}
               disabled={updateQuoteMutation.isPending}
             >
-              {BUTTON_LABELS.CANCEL}
+              {messages.common.buttons.cancel}
             </Button>
             <Button
               size="sm"
               onClick={handleUpdateQuote}
               disabled={!editQuoteText.trim() || !editQuotePage || updateQuoteMutation.isPending}
             >
-              {updateQuoteMutation.isPending ? BUTTON_LABELS.SAVING : BUTTON_LABELS.SAVE}
+              {updateQuoteMutation.isPending
+                ? messages.common.buttons.saving
+                : messages.common.buttons.save}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -367,9 +365,9 @@ export function BookDetailPage() {
       <Dialog open={deleteQuoteDialogOpen} onOpenChange={setDeleteQuoteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-base">{MISC.DELETE_QUOTE}</DialogTitle>
+            <DialogTitle className="text-base">{messages.books.quotes.delete}</DialogTitle>
             <DialogDescription className="text-sm">
-              {MESSAGES.DELETE_QUOTE_CONFIRMATION}
+              {messages.books.confirmations.deleteQuote}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -379,7 +377,7 @@ export function BookDetailPage() {
               onClick={() => setDeleteQuoteDialogOpen(false)}
               disabled={deleteQuoteMutation.isPending}
             >
-              {BUTTON_LABELS.CANCEL}
+              {messages.common.buttons.cancel}
             </Button>
             <Button
               variant="destructive"
@@ -387,7 +385,9 @@ export function BookDetailPage() {
               onClick={handleDeleteQuote}
               disabled={deleteQuoteMutation.isPending}
             >
-              {deleteQuoteMutation.isPending ? MESSAGES.DELETING : BUTTON_LABELS.DELETE}
+              {deleteQuoteMutation.isPending
+                ? messages.common.buttons.deleting
+                : messages.common.buttons.delete}
             </Button>
           </DialogFooter>
         </DialogContent>

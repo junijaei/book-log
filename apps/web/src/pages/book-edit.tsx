@@ -21,15 +21,8 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useDeleteReadingRecord, useReadingRecord, useUpsertReadingRecord } from '@/hooks';
-import {
-  BUTTON_LABELS,
-  FIELD_LABELS,
-  getReadingStatusLabel,
-  getVisibilityLabel,
-  MESSAGES,
-  MISC,
-  PLACEHOLDERS,
-} from '@/lib/constants';
+import { messages } from '@/constants/messages';
+import { getReadingStatusLabel, getVisibilityLabel } from '@/lib/constants';
 import type {
   BookEditFormData,
   LocalQuote,
@@ -164,7 +157,7 @@ export function BookEditPage() {
       navigate(`/books/${id}`);
     } catch (error) {
       console.error('Failed to save:', error);
-      toast.error(MESSAGES.FAILED_TO_SAVE);
+      toast.error(messages.common.errors.failedToSave);
     }
   };
 
@@ -176,7 +169,7 @@ export function BookEditPage() {
       navigate('/');
     } catch (error) {
       console.error('Failed to delete:', error);
-      toast.error(MESSAGES.FAILED_TO_DELETE);
+      toast.error(messages.common.errors.failedToDelete);
     } finally {
       setDeleteDialogOpen(false);
     }
@@ -212,7 +205,7 @@ export function BookEditPage() {
             <div className="flex justify-between items-center">
               <Link to="/">
                 <Button variant="ghost" size="sm">
-                  ← {BUTTON_LABELS.CANCEL}
+                  ← {messages.common.buttons.cancel}
                 </Button>
               </Link>
             </div>
@@ -229,10 +222,10 @@ export function BookEditPage() {
     return (
       <div className="min-h-screen">
         <div className="text-center py-12">
-          <p className="text-sm text-muted-foreground mb-4">{MESSAGES.BOOK_NOT_FOUND}</p>
+          <p className="text-sm text-muted-foreground mb-4">{messages.books.messages.notFound}</p>
           <Link to="/">
             <Button variant="outline" size="sm">
-              {BUTTON_LABELS.BACK_TO_LIST}
+              {messages.books.buttons.backToList}
             </Button>
           </Link>
         </div>
@@ -253,18 +246,18 @@ export function BookEditPage() {
               variant="ghost"
               size="sm"
               onClick={() => {
-                if (isDirty && !confirm(MESSAGES.UNSAVED_CHANGES_WARNING)) return;
+                if (isDirty && !confirm(messages.common.messages.unsavedChanges)) return;
                 navigate(`/books/${id}`);
               }}
             >
-              ← {BUTTON_LABELS.CANCEL}
+              ← {messages.common.buttons.cancel}
             </Button>
             <Button
               size="sm"
               onClick={handleSubmit(onSubmit)}
               disabled={isSubmitting || deleteMutation.isPending}
             >
-              {isSubmitting ? BUTTON_LABELS.SAVING : BUTTON_LABELS.SAVE}
+              {isSubmitting ? messages.common.buttons.saving : messages.common.buttons.save}
             </Button>
           </div>
         </div>
@@ -275,7 +268,7 @@ export function BookEditPage() {
           {/* SECTION 1: Book Information */}
           <Card className="mb-8">
             <CardHeader className="pb-4">
-              <CardTitle className="text-base">{MISC.BOOK_DETAILS}</CardTitle>
+              <CardTitle className="text-base">{messages.books.details.bookInfo}</CardTitle>
             </CardHeader>
             <CardContent>
               <FieldGroup className="gap-4">
@@ -285,7 +278,7 @@ export function BookEditPage() {
                     control={control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="title">{FIELD_LABELS.TITLE}</FieldLabel>
+                        <FieldLabel htmlFor="title">{messages.books.fields.title}</FieldLabel>
                         <Input {...field} id="title" aria-invalid={fieldState.invalid} />
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
@@ -297,7 +290,7 @@ export function BookEditPage() {
                     control={control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="author">{FIELD_LABELS.AUTHOR}</FieldLabel>
+                        <FieldLabel htmlFor="author">{messages.books.fields.author}</FieldLabel>
                         <Input {...field} id="author" aria-invalid={fieldState.invalid} />
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
@@ -312,7 +305,7 @@ export function BookEditPage() {
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor="cover_image_url">
-                          {FIELD_LABELS.COVER_IMAGE_URL}
+                          {messages.books.fields.coverImageUrl}
                         </FieldLabel>
                         <Input {...field} id="cover_image_url" aria-invalid={fieldState.invalid} />
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -325,7 +318,9 @@ export function BookEditPage() {
                     control={control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="total_pages">{FIELD_LABELS.TOTAL_PAGES}</FieldLabel>
+                        <FieldLabel htmlFor="total_pages">
+                          {messages.books.fields.totalPages}
+                        </FieldLabel>
                         <Input
                           {...field}
                           id="total_pages"
@@ -344,7 +339,7 @@ export function BookEditPage() {
           {/* SECTION 2: Reading Record */}
           <Card className="mb-8">
             <CardHeader className="pb-4">
-              <CardTitle className="text-base">{MISC.READING_LOG}</CardTitle>
+              <CardTitle className="text-base">{messages.books.details.readingLog}</CardTitle>
             </CardHeader>
             <CardContent>
               <FieldGroup className="gap-5">
@@ -355,7 +350,7 @@ export function BookEditPage() {
                     control={control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="status">{FIELD_LABELS.STATUS}</FieldLabel>
+                        <FieldLabel htmlFor="status">{messages.books.fields.status}</FieldLabel>
                         <Select
                           name={field.name}
                           value={field.value}
@@ -382,7 +377,9 @@ export function BookEditPage() {
                     control={control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="current_page">{FIELD_LABELS.CURRENT_PAGE}</FieldLabel>
+                        <FieldLabel htmlFor="current_page">
+                          {messages.books.fields.currentPage}
+                        </FieldLabel>
                         <Input
                           {...field}
                           id="current_page"
@@ -399,7 +396,7 @@ export function BookEditPage() {
                     control={control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="rating">{FIELD_LABELS.RATING}</FieldLabel>
+                        <FieldLabel htmlFor="rating">{messages.books.fields.rating}</FieldLabel>
                         <Input
                           {...field}
                           id="rating"
@@ -419,7 +416,9 @@ export function BookEditPage() {
                   control={control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="visibility">{FIELD_LABELS.VISIBILITY}</FieldLabel>
+                      <FieldLabel htmlFor="visibility">
+                        {messages.books.fields.visibility}
+                      </FieldLabel>
                       <Select
                         name={field.name}
                         value={field.value}
@@ -442,7 +441,9 @@ export function BookEditPage() {
                 />
 
                 <Field>
-                  <FieldLabel htmlFor="reading_period">{FIELD_LABELS.READING_PERIOD}</FieldLabel>
+                  <FieldLabel htmlFor="reading_period">
+                    {messages.books.fields.readingPeriod}
+                  </FieldLabel>
                   <DateRangePicker
                     id="reading_period"
                     value={{
@@ -463,7 +464,7 @@ export function BookEditPage() {
                   control={control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="review">{FIELD_LABELS.REVIEW}</FieldLabel>
+                      <FieldLabel htmlFor="review">{messages.books.fields.review}</FieldLabel>
                       <Textarea
                         {...field}
                         id="review"
@@ -483,7 +484,7 @@ export function BookEditPage() {
         {/* SECTION 3: Quotes */}
         <Card className="mb-8">
           <CardHeader className="pb-4">
-            <CardTitle className="text-base">{FIELD_LABELS.QUOTES}</CardTitle>
+            <CardTitle className="text-base">{messages.books.fields.quotes}</CardTitle>
           </CardHeader>
           <CardContent>
             <FieldGroup className="gap-5">
@@ -494,11 +495,13 @@ export function BookEditPage() {
                   control={controlQuote}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="new_quote_text">{MISC.ADD_NEW_QUOTE}</FieldLabel>
+                      <FieldLabel htmlFor="new_quote_text">
+                        {messages.books.quotes.addNew}
+                      </FieldLabel>
                       <Textarea
                         {...field}
                         id="new_quote_text"
-                        placeholder={PLACEHOLDERS.QUOTE_TEXT}
+                        placeholder={messages.books.placeholders.quoteText}
                         rows={4}
                         className="min-h-[120px] leading-relaxed"
                         aria-invalid={fieldState.invalid}
@@ -515,7 +518,7 @@ export function BookEditPage() {
                       <Input
                         {...field}
                         type="number"
-                        placeholder={PLACEHOLDERS.PAGE_NUMBER}
+                        placeholder={messages.books.placeholders.pageNumber}
                         className="w-28"
                       />
                     )}
@@ -526,7 +529,7 @@ export function BookEditPage() {
                     onClick={handleQuoteSubmit(onAddQuote)}
                     disabled={!newQuoteText || !newQuotePage}
                   >
-                    {BUTTON_LABELS.ADD}
+                    {messages.common.buttons.add}
                   </Button>
                 </div>
               </div>
@@ -535,7 +538,8 @@ export function BookEditPage() {
               {quotes.length > 0 && (
                 <div className="space-y-4 pt-2">
                   <h4 className="text-sm font-medium text-muted-foreground">
-                    {quotes.length}개의 인용구
+                    {quotes.length}
+                    {messages.books.details.pagesUnit}
                   </h4>
                   {quotes.map((quote, index) => (
                     <div
@@ -550,7 +554,7 @@ export function BookEditPage() {
                           p.{quote.page_number}
                           {quote.isNew && (
                             <span className="ml-2 text-blue-500">
-                              ({MISC.WILL_BE_ADDED_ON_SAVE})
+                              ({messages.books.quotes.willBeAddedOnSave})
                             </span>
                           )}
                         </span>
@@ -560,7 +564,7 @@ export function BookEditPage() {
                           onClick={() => handleDeleteQuote(index)}
                           className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                         >
-                          {BUTTON_LABELS.DELETE}
+                          {messages.common.buttons.delete}
                         </Button>
                       </div>
                     </div>
@@ -572,11 +576,11 @@ export function BookEditPage() {
         </Card>
         <Card className="bg-muted/30">
           <CardHeader className="pb-4">
-            <CardTitle className="text-base">{MESSAGES.DELETE_CONFIRMATION_TITLE}</CardTitle>
+            <CardTitle className="text-base">{messages.books.confirmations.deleteTitle}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground pb-4 text-sm">
-              {MESSAGES.DELETE_CONFIRMATION_CONTENT}
+              {messages.books.confirmations.deleteContent}
             </p>
             <Button
               variant="destructive"
@@ -584,7 +588,7 @@ export function BookEditPage() {
               onClick={() => setDeleteDialogOpen(true)}
               disabled={deleteMutation.isPending}
             >
-              {BUTTON_LABELS.DELETE}
+              {messages.common.buttons.delete}
             </Button>
           </CardContent>
         </Card>
@@ -593,9 +597,11 @@ export function BookEditPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-base">{MESSAGES.DELETE_CONFIRMATION_TITLE}</DialogTitle>
+            <DialogTitle className="text-base">
+              {messages.books.confirmations.deleteTitle}
+            </DialogTitle>
             <DialogDescription className="text-sm">
-              {MESSAGES.DELETE_CONFIRMATION_MESSAGE}
+              {messages.books.confirmations.deleteMessage}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -605,7 +611,7 @@ export function BookEditPage() {
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
             >
-              {BUTTON_LABELS.CANCEL}
+              {messages.common.buttons.cancel}
             </Button>
             <Button
               variant="destructive"
@@ -613,7 +619,9 @@ export function BookEditPage() {
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? MESSAGES.DELETING : BUTTON_LABELS.DELETE}
+              {deleteMutation.isPending
+                ? messages.common.buttons.deleting
+                : messages.common.buttons.delete}
             </Button>
           </DialogFooter>
         </DialogContent>

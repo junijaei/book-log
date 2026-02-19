@@ -10,14 +10,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useInfiniteScroll, useReadingRecords } from '@/hooks';
-import {
-  BUTTON_LABELS,
-  FILTER_LABELS,
-  getReadingStatusLabel,
-  MESSAGES,
-  NAV_LABELS,
-  PLACEHOLDERS,
-} from '@/lib/constants';
+import { messages } from '@/constants/messages';
+import { getReadingStatusLabel } from '@/lib/constants';
 import type { ReadingRecordFilters, ReadingRecordSort, ReadingStatus } from '@/types';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -25,13 +19,13 @@ import { Link } from 'react-router-dom';
 type SortField = 'updated_at' | 'start_date' | 'end_date';
 
 const SORT_OPTIONS: { value: SortField; label: string }[] = [
-  { value: 'updated_at', label: FILTER_LABELS.SORT_BY_UPDATED },
-  { value: 'start_date', label: FILTER_LABELS.SORT_BY_START_DATE },
-  { value: 'end_date', label: FILTER_LABELS.SORT_BY_END_DATE },
+  { value: 'updated_at', label: messages.books.filters.sortByUpdated },
+  { value: 'start_date', label: messages.books.filters.sortByStartDate },
+  { value: 'end_date', label: messages.books.filters.sortByEndDate },
 ];
 
 const STATUS_OPTIONS: { value: ReadingStatus | 'all'; label: string }[] = [
-  { value: 'all', label: FILTER_LABELS.ALL },
+  { value: 'all', label: messages.books.filters.all },
   { value: 'want_to_read', label: getReadingStatusLabel('want_to_read') },
   { value: 'reading', label: getReadingStatusLabel('reading') },
   { value: 'finished', label: getReadingStatusLabel('finished') },
@@ -86,7 +80,7 @@ export function MyBooksPage() {
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
         <div className="container mx-auto px-4 py-3 max-w-6xl">
           <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold">{NAV_LABELS.MY_BOOKS}</h1>
+            <h1 className="text-xl font-bold">{messages.common.navigation.myBooks}</h1>
             <div className="flex gap-2 items-center">
               <Button
                 variant={showFilters || hasActiveFilters ? 'default' : 'outline'}
@@ -98,7 +92,7 @@ export function MyBooksPage() {
               </Button>
               <ThemeToggle />
               <Link to="/books/new">
-                <Button size="sm">{BUTTON_LABELS.ADD_BOOK}</Button>
+                <Button size="sm">{messages.books.buttons.addBook}</Button>
               </Link>
             </div>
           </div>
@@ -107,7 +101,7 @@ export function MyBooksPage() {
             <div className="mt-3 pb-1 space-y-3 animate-in slide-in-from-top-2 duration-200">
               <Input
                 type="search"
-                placeholder={PLACEHOLDERS.SEARCH}
+                placeholder={messages.books.placeholders.search}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className="text-sm"
@@ -151,10 +145,10 @@ export function MyBooksPage() {
           observerTarget={observerTarget}
           emptyState={
             <div className="text-center py-12 text-muted-foreground">
-              <p className="text-sm">{MESSAGES.NO_BOOKS_FOUND}</p>
+              <p className="text-sm">{messages.books.messages.empty}</p>
               <Link to="/books/new">
                 <Button variant="outline" size="sm" className="mt-4">
-                  {BUTTON_LABELS.ADD_FIRST_BOOK}
+                  {messages.books.buttons.addFirstBook}
                 </Button>
               </Link>
             </div>

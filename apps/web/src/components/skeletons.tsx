@@ -1,4 +1,4 @@
-import { MISC } from '@/lib/constants';
+import { messages } from '@/constants/messages';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
 
@@ -99,7 +99,7 @@ export function ProfileSectionSkeleton() {
     <Card>
       <CardHeader className="pb-4">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-base">{MISC.MY_PAGE}</CardTitle>
+          <CardTitle className="text-base">{messages.profile.pages.myPage}</CardTitle>
           <Skeleton className="h-8 w-24 rounded-md" />
         </div>
       </CardHeader>
@@ -121,7 +121,7 @@ export function FriendListItemSkeleton() {
     <Card>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-base">{MISC.FRIEND_LIST}</CardTitle>
+          <CardTitle className="text-base">{messages.friends.sections.friendList}</CardTitle>
           <Skeleton className="h-8 w-20 rounded-md" />
         </div>
       </CardHeader>

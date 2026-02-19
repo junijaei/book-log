@@ -1,5 +1,5 @@
 import { useBookSearch } from '@/hooks';
-import { MESSAGES, MISC, PLACEHOLDERS } from '@/lib/constants';
+import { messages } from '@/constants/messages';
 import { cn } from '@/lib/utils';
 import type { AladinBook } from '@/types';
 import { Loader2, Search, X } from 'lucide-react';
@@ -17,7 +17,7 @@ export function BookSearchInput({
   onSelect,
   autoFocus = false,
   className,
-  placeholder = PLACEHOLDERS.BOOK_SEARCH,
+  placeholder = messages.books.placeholders.bookSearch,
 }: BookSearchInputProps) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -75,7 +75,7 @@ export function BookSearchInput({
           placeholder={placeholder}
           className="pl-9 pr-9"
           autoComplete="off"
-          aria-label={MISC.BOOK_SEARCH}
+          aria-label={messages.books.search.title}
           aria-expanded={showDropdown}
           aria-haspopup="listbox"
         />
@@ -84,7 +84,7 @@ export function BookSearchInput({
             type="button"
             onClick={handleClear}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="검색어 지우기"
+            aria-label={messages.common.buttons.cancel}
           >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
           </button>
@@ -99,13 +99,13 @@ export function BookSearchInput({
           {(isFetching || isDebouncing) && !hasResults && (
             <div className="flex items-center justify-center gap-2 p-4 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>검색 중...</span>
+              <span>{messages.common.states.loading}</span>
             </div>
           )}
 
           {isError && !isLoading && (
             <div className="p-4 text-sm text-destructive text-center">
-              {MESSAGES.BOOK_SEARCH_FAILED}
+              {messages.books.errors.searchFailed}
             </div>
           )}
 
@@ -128,7 +128,7 @@ export function BookSearchInput({
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                          {MESSAGES.NO_COVER}
+                          {messages.books.details.noCover}
                         </div>
                       )}
                     </div>
@@ -145,7 +145,7 @@ export function BookSearchInput({
 
           {!isLoading && !isError && !hasResults && query.trim().length >= 2 && (
             <div className="p-4 text-sm text-muted-foreground text-center">
-              {MESSAGES.BOOK_SEARCH_NO_RESULTS}
+              {messages.books.errors.searchNoResults}
             </div>
           )}
         </div>

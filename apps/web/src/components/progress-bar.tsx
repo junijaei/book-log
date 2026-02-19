@@ -1,4 +1,5 @@
-import { FIELD_LABELS, formatPageProgress, formatPercentage } from '@/lib/constants';
+import { messages } from '@/constants/messages';
+import { formatPageProgress, formatPercentage } from '@/lib/constants';
 
 interface ProgressBarProps {
   currentPage: number | null;
@@ -22,7 +23,9 @@ export function ProgressBar({
     <div>
       {showLabel && (
         <div className="flex justify-between text-sm mb-2">
-          <span className="font-medium text-muted-foreground">{FIELD_LABELS.PROGRESS}</span>
+          <span className="font-medium text-muted-foreground">
+            {messages.books.fields.progress}
+          </span>
           <span className="text-muted-foreground">
             {formatPageProgress(currentPage, totalPages)} (
             {formatPercentage(currentPage, totalPages)})

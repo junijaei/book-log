@@ -1,4 +1,4 @@
-import { MESSAGES } from '@/lib/constants';
+import { messages } from '@/constants/messages';
 
 interface BookCoverProps {
   url: string | null;
@@ -16,16 +16,14 @@ export function BookCover({ url, alt, size = 'sm' }: BookCoverProps) {
   const sizeClass = sizeClasses[size];
 
   if (url) {
-    return (
-      <img src={url} alt={alt} className={`${sizeClass} object-cover rounded`} />
-    );
+    return <img src={url} alt={alt} className={`${sizeClass} object-cover rounded`} />;
   }
 
   return (
     <div
       className={`${sizeClass} bg-muted rounded flex items-center justify-center text-muted-foreground text-xs`}
     >
-      {MESSAGES.NO_COVER}
+      {messages.books.details.noCover}
     </div>
   );
 }

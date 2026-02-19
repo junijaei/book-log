@@ -1,4 +1,5 @@
 import { formatDateRange } from '@/lib/constants';
+import { messages } from '@/constants/messages';
 import type { ReadingRecord } from '@/types';
 import { BookMarked, MessageSquareQuote, NotebookPen } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -64,7 +65,8 @@ export function BookCard({ record, showAuthor }: BookCardProps) {
                 />
               </div>
               <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
-                {reading_log.current_page?.toLocaleString()} / {book.total_pages?.toLocaleString()}p
+                {reading_log.current_page?.toLocaleString()} / {book.total_pages?.toLocaleString()}
+                {messages.books.details.pagesUnit}
                 &nbsp;{progress}%
               </span>
             </div>
@@ -79,7 +81,8 @@ export function BookCard({ record, showAuthor }: BookCardProps) {
             {progress === null && book.total_pages && (
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/70">
                 <BookMarked className="w-3 h-3" />
-                {book.total_pages.toLocaleString()}p
+                {book.total_pages.toLocaleString()}
+                {messages.books.details.pagesUnit}
               </span>
             )}
 
@@ -95,7 +98,7 @@ export function BookCard({ record, showAuthor }: BookCardProps) {
             {hasReview && (
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/70">
                 <NotebookPen className="w-3 h-3" />
-                감상
+                {messages.books.details.hasReview}
               </span>
             )}
           </div>

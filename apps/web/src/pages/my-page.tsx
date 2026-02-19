@@ -33,15 +33,7 @@ import {
   useUpdateProfile,
 } from '@/hooks';
 import { useAuth } from '@/hooks/use-auth';
-import {
-  BUTTON_LABELS,
-  FIELD_LABELS,
-  MESSAGES,
-  MISC,
-  PAGE_TITLES,
-  PASSWORD_SETUP_LABELS,
-  PLACEHOLDERS,
-} from '@/lib/constants';
+import { messages } from '@/constants/messages';
 import type { PublicProfile, UpdateProfilePayload } from '@/types';
 import { Inbox, Send, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -59,20 +51,20 @@ export function MyPage() {
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
         <div className="container mx-auto px-4 py-3 max-w-2xl">
           <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold">{PAGE_TITLES.MY_PAGE}</h1>
+            <h1 className="text-xl font-bold">{messages.profile.pages.myPage}</h1>
             <div className="flex gap-2 items-center">
               <ThemeToggle />
               <Button variant="outline" size="sm" onClick={() => signOut()}>
-                {BUTTON_LABELS.SIGN_OUT}
+                {messages.common.buttons.signOut}
               </Button>
             </div>
           </div>
 
           <div className="flex gap-1 mt-3 p-1 bg-muted rounded-lg">
             {[
-              { key: 'profile' as Tab, label: PAGE_TITLES.MY_PAGE },
-              { key: 'friends' as Tab, label: PAGE_TITLES.FRIENDS },
-              { key: 'requests' as Tab, label: PAGE_TITLES.FRIEND_REQUESTS },
+              { key: 'profile' as Tab, label: messages.profile.pages.myPage },
+              { key: 'friends' as Tab, label: messages.friends.pages.friends },
+              { key: 'requests' as Tab, label: messages.friends.pages.requests },
             ].map(tab => (
               <button
                 key={tab.key}
@@ -121,22 +113,22 @@ function PasswordDialog({ open, onClose, mode }: PasswordDialogProps) {
     setError(null);
 
     if (password.length < 6) {
-      setError(PASSWORD_SETUP_LABELS.MIN_LENGTH_ERROR);
+      setError(messages.auth.errors.passwordTooShort);
       return;
     }
     if (password !== confirmPassword) {
-      setError(PASSWORD_SETUP_LABELS.MISMATCH_ERROR);
+      setError(messages.auth.errors.passwordMismatch);
       return;
     }
 
     setSaving(true);
     try {
       await updatePassword(password);
-      toast.success(PASSWORD_SETUP_LABELS.SUCCESS);
+      toast.success(messages.auth.success.passwordSet);
       onClose();
     } catch (err) {
       console.error('Password update error:', err);
-      setError(err instanceof Error ? err.message : '비밀번호 설정에 실패했습니다.');
+      setError(err instanceof Error ? err.message : messages.auth.errors.passwordSetupFailed);
     } finally {
       setSaving(false);
     }
@@ -152,11 +144,13 @@ function PasswordDialog({ open, onClose, mode }: PasswordDialogProps) {
   }, [open]);
 
   const title =
-    mode === 'add' ? PASSWORD_SETUP_LABELS.ADD_TITLE : PASSWORD_SETUP_LABELS.CHANGE_TITLE;
+    mode === 'add'
+      ? messages.auth.passwordSetup.addTitleDialog
+      : messages.auth.passwordSetup.changeTitleDialog;
   const description =
     mode === 'add'
-      ? PASSWORD_SETUP_LABELS.ADD_DESCRIPTION
-      : PASSWORD_SETUP_LABELS.CHANGE_DESCRIPTION;
+      ? messages.auth.passwordSetup.addDescription
+      : messages.auth.passwordSetup.changeDescription;
 
   return (
     <Dialog open={open} onOpenChange={open => !open && onClose()}>
@@ -173,14 +167,14 @@ function PasswordDialog({ open, onClose, mode }: PasswordDialogProps) {
 
           <div className="space-y-2">
             <label htmlFor="new-pw" className="text-sm font-medium">
-              {PASSWORD_SETUP_LABELS.NEW_PASSWORD}
+              {messages.auth.passwordSetup.newPasswordLabel}
             </label>
             <Input
               id="new-pw"
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder={PASSWORD_SETUP_LABELS.PASSWORD_PLACEHOLDER}
+              placeholder={messages.auth.passwordSetup.passwordPlaceholder}
               disabled={saving}
               autoFocus
             />
@@ -188,14 +182,14 @@ function PasswordDialog({ open, onClose, mode }: PasswordDialogProps) {
 
           <div className="space-y-2">
             <label htmlFor="confirm-pw" className="text-sm font-medium">
-              {PASSWORD_SETUP_LABELS.CONFIRM_PASSWORD}
+              {messages.auth.passwordSetup.confirmPasswordLabel}
             </label>
             <Input
               id="confirm-pw"
               type="password"
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
-              placeholder={PASSWORD_SETUP_LABELS.CONFIRM_PLACEHOLDER}
+              placeholder={messages.auth.passwordSetup.confirmPlaceholder}
               disabled={saving}
             />
           </div>
@@ -203,10 +197,10 @@ function PasswordDialog({ open, onClose, mode }: PasswordDialogProps) {
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button variant="outline" className="flex-1" onClick={onClose} disabled={saving}>
-            {PASSWORD_SETUP_LABELS.CANCEL}
+            {messages.common.buttons.cancel}
           </Button>
           <Button className="flex-1" onClick={handleSave} disabled={saving}>
-            {saving ? PASSWORD_SETUP_LABELS.SAVING : PASSWORD_SETUP_LABELS.SAVE}
+            {saving ? messages.common.buttons.saving : messages.common.buttons.save}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -258,10 +252,10 @@ function ProfileSection() {
         avatar_url: data.avatar_url || null,
       });
       setIsEditing(false);
-      toast.success(MESSAGES.PROFILE_UPDATED);
+      toast.success(messages.profile.success.profileUpdated);
     } catch (error) {
       console.error('Failed to update profile:', error);
-      toast.error(MESSAGES.FAILED_TO_SAVE);
+      toast.error(messages.common.errors.failedToSave);
     }
   };
 
@@ -273,10 +267,10 @@ function ProfileSection() {
     <Card>
       <CardHeader className="pb-4">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-base">{MISC.MY_PAGE}</CardTitle>
+          <CardTitle className="text-base">{messages.profile.sections.myInfo}</CardTitle>
           {!isEditing && (
             <Button variant="outline" size="sm" onClick={startEditing}>
-              {BUTTON_LABELS.EDIT_PROFILE}
+              {messages.profile.buttons.editProfile}
             </Button>
           )}
         </div>
@@ -290,19 +284,19 @@ function ProfileSection() {
                 control={control}
                 rules={{
                   required: true,
-                  minLength: { value: 2, message: MESSAGES.NICKNAME_LENGTH_ERROR },
-                  maxLength: { value: 20, message: MESSAGES.NICKNAME_LENGTH_ERROR },
+                  minLength: { value: 2, message: messages.profile.errors.nicknameLengthError },
+                  maxLength: { value: 20, message: messages.profile.errors.nicknameLengthError },
                 }}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="nickname">
-                      {FIELD_LABELS.NICKNAME} <span className="text-destructive">*</span>
+                      {messages.profile.fields.nickname} <span className="text-destructive">*</span>
                     </FieldLabel>
                     <Input
                       {...field}
                       id="nickname"
                       value={field.value ?? ''}
-                      placeholder={PLACEHOLDERS.NICKNAME}
+                      placeholder={messages.profile.placeholders.nickname}
                       aria-invalid={fieldState.invalid}
                     />
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -315,13 +309,15 @@ function ProfileSection() {
                 control={control}
                 render={({ field }) => (
                   <Field>
-                    <FieldLabel htmlFor="avatar_url">{FIELD_LABELS.AVATAR_URL}</FieldLabel>
+                    <FieldLabel htmlFor="avatar_url">
+                      {messages.profile.fields.avatarUrl}
+                    </FieldLabel>
                     <Input
                       {...field}
                       id="avatar_url"
                       type="url"
                       value={field.value ?? ''}
-                      placeholder={PLACEHOLDERS.AVATAR_URL}
+                      placeholder={messages.profile.placeholders.avatarUrl}
                     />
                     {field.value && (
                       <img
@@ -342,13 +338,13 @@ function ProfileSection() {
                 control={control}
                 render={({ field }) => (
                   <Field>
-                    <FieldLabel htmlFor="bio">{FIELD_LABELS.BIO}</FieldLabel>
+                    <FieldLabel htmlFor="bio">{messages.profile.fields.bio}</FieldLabel>
                     <Textarea
                       {...field}
                       id="bio"
                       rows={3}
                       value={field.value ?? ''}
-                      placeholder={PLACEHOLDERS.BIO}
+                      placeholder={messages.profile.placeholders.bio}
                     />
                   </Field>
                 )}
@@ -362,10 +358,12 @@ function ProfileSection() {
                   onClick={() => setIsEditing(false)}
                   disabled={updateProfileMutation.isPending}
                 >
-                  {BUTTON_LABELS.CANCEL}
+                  {messages.common.buttons.cancel}
                 </Button>
                 <Button type="submit" size="sm" disabled={updateProfileMutation.isPending}>
-                  {updateProfileMutation.isPending ? BUTTON_LABELS.SAVING : BUTTON_LABELS.SAVE}
+                  {updateProfileMutation.isPending
+                    ? messages.common.buttons.saving
+                    : messages.common.buttons.save}
                 </Button>
               </div>
             </FieldGroup>
@@ -394,11 +392,13 @@ function ProfileSection() {
             <Separator />
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">{PASSWORD_SETUP_LABELS.NEW_PASSWORD}</p>
+                <p className="text-sm font-medium">
+                  {messages.auth.passwordSetup.newPasswordLabel}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {hasPassword
-                    ? '비밀번호가 설정되어 있습니다.'
-                    : '비밀번호가 설정되어 있지 않습니다.'}
+                    ? messages.auth.passwordSetup.passwordStatus.hasPassword
+                    : messages.auth.passwordSetup.passwordStatus.noPassword}
                 </p>
               </div>
               <Button
@@ -408,7 +408,9 @@ function ProfileSection() {
                   setPasswordDialog({ open: true, mode: hasPassword ? 'change' : 'add' })
                 }
               >
-                {hasPassword ? PASSWORD_SETUP_LABELS.CHANGE_BTN : PASSWORD_SETUP_LABELS.ADD_BTN}
+                {hasPassword
+                  ? messages.auth.passwordSetup.changeButton
+                  : messages.auth.passwordSetup.addButton}
               </Button>
             </div>
           </div>
@@ -449,7 +451,7 @@ function FriendsSection() {
       setConfirmDialog(null);
     } catch (error) {
       console.error('Failed:', error);
-      toast.error(MESSAGES.FAILED_TO_DELETE);
+      toast.error(messages.common.errors.failedToDelete);
     }
   };
 
@@ -493,7 +495,7 @@ function FriendsSection() {
       setSearchTerm('');
       setSelectedUser(null);
       setShowAddFriend(false);
-      toast.success(MESSAGES.FRIEND_REQUEST_SENT);
+      toast.success(messages.friends.success.requestSent);
     } catch (error) {
       console.error('Failed to send request:', error);
       if (error instanceof Error) {
@@ -512,13 +514,15 @@ function FriendsSection() {
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
             <CardTitle className="text-base">
-              {MISC.FRIEND_LIST}
+              {messages.friends.sections.friendList}
               <span className="text-muted-foreground font-normal ml-2">
                 ({data?.pages[0]?.meta.total ?? 0})
               </span>
             </CardTitle>
             <Button variant="outline" size="sm" onClick={() => setShowAddFriend(!showAddFriend)}>
-              {showAddFriend ? BUTTON_LABELS.CANCEL : BUTTON_LABELS.SEND_REQUEST}
+              {showAddFriend
+                ? messages.common.buttons.cancel
+                : messages.friends.buttons.sendRequest}
             </Button>
           </div>
         </CardHeader>
@@ -529,7 +533,7 @@ function FriendsSection() {
               <div className="flex gap-2">
                 <div className="relative flex-1" ref={searchContainerRef}>
                   <Input
-                    placeholder={PLACEHOLDERS.SEARCH_NICKNAME}
+                    placeholder={messages.friends.placeholders.searchNickname}
                     value={searchTerm}
                     onChange={e => {
                       setSearchTerm(e.target.value);
@@ -543,11 +547,11 @@ function FriendsSection() {
                     <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                       {isSearching ? (
                         <div className="p-3 text-sm text-muted-foreground text-center">
-                          {MESSAGES.LOADING}
+                          {messages.common.states.loading}
                         </div>
                       ) : !searchResults?.data.length ? (
                         <div className="p-3 text-sm text-muted-foreground text-center">
-                          {MESSAGES.NO_SEARCH_RESULTS}
+                          {messages.friends.empty.noSearchResults}
                         </div>
                       ) : (
                         searchResults.data.map(user => (
@@ -582,7 +586,7 @@ function FriendsSection() {
                   {showResults && debouncedTerm.length > 0 && debouncedTerm.length < 2 && (
                     <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg">
                       <div className="p-3 text-sm text-muted-foreground text-center">
-                        {MESSAGES.SEARCH_MIN_LENGTH}
+                        {messages.friends.messages.searchMinLength}
                       </div>
                     </div>
                   )}
@@ -593,8 +597,8 @@ function FriendsSection() {
                   disabled={!selectedUser || sendRequestMutation.isPending}
                 >
                   {sendRequestMutation.isPending
-                    ? BUTTON_LABELS.SENDING
-                    : BUTTON_LABELS.SEND_REQUEST}
+                    ? messages.friends.buttons.sending
+                    : messages.friends.buttons.sendRequest}
                 </Button>
               </div>
             </div>
@@ -605,9 +609,9 @@ function FriendsSection() {
           {friends.length === 0 ? (
             <EmptyState
               icon={<Users size={48} strokeWidth={1} />}
-              message={MESSAGES.NO_FRIENDS}
+              message={messages.friends.empty.noFriends}
               action={{
-                label: BUTTON_LABELS.SEND_REQUEST,
+                label: messages.friends.buttons.sendRequest,
                 onClick: () => setShowAddFriend(true),
               }}
             />
@@ -648,7 +652,7 @@ function FriendsSection() {
                         })
                       }
                     >
-                      {BUTTON_LABELS.REMOVE}
+                      {messages.friends.buttons.remove}
                     </Button>
                     <Button
                       variant="ghost"
@@ -662,7 +666,7 @@ function FriendsSection() {
                         })
                       }
                     >
-                      {BUTTON_LABELS.BLOCK}
+                      {messages.friends.buttons.block}
                     </Button>
                   </div>
                 </div>
@@ -676,7 +680,9 @@ function FriendsSection() {
                   onClick={() => fetchNextPage()}
                   disabled={isFetchingNextPage}
                 >
-                  {isFetchingNextPage ? MESSAGES.LOADING : BUTTON_LABELS.LOAD_MORE}
+                  {isFetchingNextPage
+                    ? messages.common.states.loading
+                    : messages.common.buttons.loadMore}
                 </Button>
               )}
             </div>
@@ -688,17 +694,19 @@ function FriendsSection() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-base">
-              {confirmDialog?.type === 'remove' ? BUTTON_LABELS.REMOVE_FRIEND : BUTTON_LABELS.BLOCK}
+              {confirmDialog?.type === 'remove'
+                ? messages.friends.buttons.removeFriend
+                : messages.friends.buttons.block}
             </DialogTitle>
             <DialogDescription className="text-sm">
               {confirmDialog?.type === 'remove'
-                ? MESSAGES.REMOVE_FRIEND_CONFIRMATION
-                : MESSAGES.BLOCK_CONFIRMATION}
+                ? messages.friends.confirmations.removeFriend
+                : messages.friends.confirmations.block}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setConfirmDialog(null)}>
-              {BUTTON_LABELS.CANCEL}
+              {messages.common.buttons.cancel}
             </Button>
             <Button
               variant="destructive"
@@ -707,10 +715,10 @@ function FriendsSection() {
               disabled={deleteFriendshipMutation.isPending || blockUserMutation.isPending}
             >
               {deleteFriendshipMutation.isPending || blockUserMutation.isPending
-                ? MESSAGES.LOADING
+                ? messages.common.states.loading
                 : confirmDialog?.type === 'remove'
-                  ? BUTTON_LABELS.REMOVE
-                  : BUTTON_LABELS.BLOCK}
+                  ? messages.friends.buttons.remove
+                  : messages.friends.buttons.block}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -748,7 +756,7 @@ function RequestsSection() {
       await acceptMutation.mutateAsync(friendshipId);
     } catch (error) {
       console.error('Failed to accept:', error);
-      toast.error(MESSAGES.FAILED_TO_SAVE);
+      toast.error(messages.common.errors.failedToSave);
     }
   };
 
@@ -757,7 +765,7 @@ function RequestsSection() {
       await rejectMutation.mutateAsync(friendshipId);
     } catch (error) {
       console.error('Failed to reject:', error);
-      toast.error(MESSAGES.FAILED_TO_SAVE);
+      toast.error(messages.common.errors.failedToSave);
     }
   };
 
@@ -766,7 +774,7 @@ function RequestsSection() {
       await deleteMutation.mutateAsync(friendshipId);
     } catch (error) {
       console.error('Failed to cancel:', error);
-      toast.error(MESSAGES.FAILED_TO_DELETE);
+      toast.error(messages.common.errors.failedToDelete);
     }
   };
 
@@ -775,7 +783,7 @@ function RequestsSection() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">
-            {MISC.RECEIVED_REQUESTS}
+            {messages.friends.sections.receivedRequests}
             <span className="text-muted-foreground font-normal ml-2">
               ({receivedData?.pages[0]?.meta.total ?? 0})
             </span>
@@ -791,7 +799,7 @@ function RequestsSection() {
           ) : received.length === 0 ? (
             <EmptyState
               icon={<Inbox size={48} strokeWidth={1} />}
-              message={MESSAGES.NO_RECEIVED_REQUESTS}
+              message={messages.friends.empty.noReceivedRequests}
             />
           ) : (
             <div className="space-y-1">
@@ -823,7 +831,9 @@ function RequestsSection() {
                       onClick={() => handleAccept(item.friendship_id)}
                       disabled={acceptMutation.isPending}
                     >
-                      {acceptMutation.isPending ? BUTTON_LABELS.ACCEPTING : BUTTON_LABELS.ACCEPT}
+                      {acceptMutation.isPending
+                        ? messages.friends.buttons.accepting
+                        : messages.friends.buttons.accept}
                     </Button>
                     <Button
                       variant="outline"
@@ -831,7 +841,7 @@ function RequestsSection() {
                       onClick={() => handleReject(item.friendship_id)}
                       disabled={rejectMutation.isPending}
                     >
-                      {BUTTON_LABELS.REJECT}
+                      {messages.friends.buttons.reject}
                     </Button>
                   </div>
                 </div>
@@ -845,7 +855,9 @@ function RequestsSection() {
                   onClick={() => fetchMoreReceived()}
                   disabled={isFetchingMoreReceived}
                 >
-                  {isFetchingMoreReceived ? MESSAGES.LOADING : BUTTON_LABELS.LOAD_MORE}
+                  {isFetchingMoreReceived
+                    ? messages.common.states.loading
+                    : messages.common.buttons.loadMore}
                 </Button>
               )}
             </div>
@@ -858,7 +870,7 @@ function RequestsSection() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">
-            {MISC.SENT_REQUESTS}
+            {messages.friends.sections.sentRequests}
             <span className="text-muted-foreground font-normal ml-2">
               ({sentData?.pages[0]?.meta.total ?? 0})
             </span>
@@ -874,7 +886,7 @@ function RequestsSection() {
           ) : sent.length === 0 ? (
             <EmptyState
               icon={<Send size={48} strokeWidth={1} />}
-              message={MESSAGES.NO_SENT_REQUESTS}
+              message={messages.friends.empty.noSentRequests}
             />
           ) : (
             <div className="space-y-1">
@@ -906,7 +918,7 @@ function RequestsSection() {
                     onClick={() => handleCancelSent(item.friendship_id)}
                     disabled={deleteMutation.isPending}
                   >
-                    {BUTTON_LABELS.CANCEL_REQUEST}
+                    {messages.friends.buttons.cancelRequest}
                   </Button>
                 </div>
               ))}
@@ -919,7 +931,9 @@ function RequestsSection() {
                   onClick={() => fetchMoreSent()}
                   disabled={isFetchingMoreSent}
                 >
-                  {isFetchingMoreSent ? MESSAGES.LOADING : BUTTON_LABELS.LOAD_MORE}
+                  {isFetchingMoreSent
+                    ? messages.common.states.loading
+                    : messages.common.buttons.loadMore}
                 </Button>
               )}
             </div>

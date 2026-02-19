@@ -1,4 +1,4 @@
-import { FIELD_LABELS } from '@/lib/constants';
+import { messages } from '@/constants/messages';
 
 interface DateRangeDisplayProps {
   startDate: string | null;
@@ -33,13 +33,13 @@ export function DateRangeDisplay({
     <div className="flex gap-6 text-sm">
       {startDate && (
         <div>
-          <span className="font-medium">{FIELD_LABELS.START_DATE}: </span>
+          <span className="font-medium">{messages.books.fields.startDate}: </span>
           <span className="text-muted-foreground">{startDate}</span>
         </div>
       )}
       {endDate && (
         <div>
-          <span className="font-medium">{FIELD_LABELS.END_DATE}: </span>
+          <span className="font-medium">{messages.books.fields.endDate}: </span>
           <span className="text-muted-foreground">{endDate}</span>
         </div>
       )}
