@@ -43,3 +43,10 @@ export interface NewQuoteFormData {
   text: string;
   page_number: string;
 }
+
+/** Quick reading record form data (today's session) */
+export interface QuickRecordFormData {
+  current_page: string;
+  reflection: string;
+  quote_text: string;
+}

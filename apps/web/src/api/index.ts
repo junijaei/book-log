@@ -30,6 +30,9 @@ export {
 // Quotes
 export { createQuote, updateQuote, deleteQuote } from './quotes';
 
+// Reviews
+export { createReview, updateReview, deleteReview } from './reviews';
+
 // Profiles
 export { getProfile, updateProfile, getPublicProfile, searchUsers } from './profiles';
 

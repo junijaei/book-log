@@ -48,6 +48,8 @@ export const booksMessages = {
     startDate: '시작일',
     endDate: '종료일',
     review: '감상문',
+    reflection: '감상',
+    reflectionContent: '감상 내용',
     quotes: '인용구',
     quoteText: '인용구 텍스트',
     pageNumber: 'P.',
@@ -78,9 +80,13 @@ export const booksMessages = {
     addBook: '도서 추가',
     addFirstBook: '첫 도서 추가하기',
     addQuote: '인용구 추가',
+    addReflection: '감상 추가',
     backToList: '목록으로',
     manualInput: '직접 입력하기',
     editBook: '수정하기',
+    recordToday: '오늘 독서',
+    markAsCompleted: '완독 처리',
+    deleteRecord: '기록 삭제',
   },
 
   // Book search
@@ -96,6 +102,15 @@ export const booksMessages = {
     delete: '인용구 삭제',
     empty: '등록된 인용구가 없습니다.',
     willBeAddedOnSave: '저장 시 추가됨',
+  },
+
+  // Reflections (reviews)
+  reflections: {
+    addNew: '새 감상 추가',
+    edit: '감상 수정',
+    delete: '감상 삭제',
+    empty: '등록된 감상이 없습니다.',
+    sectionTitle: '감상',
   },
 
   // Book details
@@ -123,6 +138,9 @@ export const booksMessages = {
     deleteMessage: '이 독서 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
     deleteBookWarning: '다른 독서 기록이 없어 도서도 함께 삭제됩니다.',
     deleteQuote: '이 인용구를 삭제하시겠습니까?',
+    deleteReflection: '이 감상을 삭제하시겠습니까?',
+    bookCompletedTitle: '완독 축하합니다! 🎉',
+    bookCompleted: '마지막 페이지에 도달했습니다! 완독으로 처리할까요?',
   },
 
   // Errors
@@ -134,5 +152,8 @@ export const booksMessages = {
   // Success messages
   success: {
     quoteAdded: '인용구가 추가되었습니다.',
+    reflectionAdded: '감상이 추가되었습니다.',
+    recordSaved: '오늘 독서 기록이 저장되었습니다.',
+    bookMarkedCompleted: '완독으로 처리되었습니다.',
   },
 } as const;

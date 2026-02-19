@@ -76,6 +76,7 @@ export type {
   BookEditFormData,
   LocalQuote,
   NewQuoteFormData,
+  QuickRecordFormData,
 } from './forms';
 
 // Database types (from @book-log/database via ./database)
