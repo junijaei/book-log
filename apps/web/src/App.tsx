@@ -3,10 +3,10 @@ import { AppLayout } from './components/app-layout';
 import { AuthGuard } from './components/auth-guard';
 import { Toaster } from './components/ui/sonner';
 import { AuthProvider } from './lib/auth/auth-provider';
+import { ScrollToTop } from './lib/scroll-to-top';
 import { ThemeProvider } from './lib/theme-provider';
 import { AuthCallbackPage } from './pages/auth-callback';
 import { BookDetailPage } from './pages/book-detail';
-import { BookEditPage } from './pages/book-edit';
 import { BookNewPage } from './pages/book-new';
 import { ErrorPage } from './pages/error';
 import { FeedPage } from './pages/feed';
@@ -20,10 +20,10 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
-
             <Route
               path="/"
               element={
@@ -71,15 +71,6 @@ function App() {
                 </AuthGuard>
               }
             />
-            <Route
-              path="/books/:id/edit"
-              element={
-                <AuthGuard>
-                  <BookEditPage />
-                </AuthGuard>
-              }
-            />
-
             <Route path="/error" element={<ErrorPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
