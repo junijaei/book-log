@@ -228,7 +228,8 @@ function ProfileSection() {
   });
 
   const { user } = useAuth();
-  const hasPassword = user?.user_metadata?.has_password === true;
+  const providers = (user?.app_metadata?.providers ?? []) as string[];
+  const hasPassword = providers.includes('email');
 
   const { control, handleSubmit, reset } = useForm<UpdateProfilePayload>({
     defaultValues: {

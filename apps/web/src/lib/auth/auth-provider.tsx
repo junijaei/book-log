@@ -91,7 +91,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const updatePassword = useCallback(async (password: string) => {
     await apiUpdatePassword(password);
-    // Refresh session so user metadata reflects has_password: true
+    // 비밀번호 설정 후 세션 갱신 — app_metadata.providers가 업데이트된 유저를 반영
     const refreshed = await getSession();
     if (refreshed) {
       setSession(refreshed);

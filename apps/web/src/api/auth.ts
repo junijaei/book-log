@@ -93,8 +93,6 @@ export async function signInWithPassword(email: string, password: string): Promi
       password,
     });
 
-    console.log(data, error);
-
     if (error) {
       throw new ApiError(error.message, error.status, error.code, error);
     }
@@ -135,8 +133,9 @@ export async function signInWithGoogle(): Promise<void> {
 }
 
 /**
- * Updates the current user's password and marks has_password in metadata.
- * Used when a magic-link user wants to add or change their password.
+ * Updates the current user's password.
+ * Supabase가 비밀번호 설정 시 자동으로 app_metadata.providers에 'email'을 추가하므로
+ * 별도 메타데이터 플래그 불필요.
  *
  * @param password - The new password (min 6 characters)
  * @throws {ApiError} If the update fails
@@ -145,7 +144,6 @@ export async function updatePassword(password: string): Promise<void> {
   try {
     const { error } = await supabase.auth.updateUser({
       password,
-      data: { has_password: true },
     });
 
     if (error) {

@@ -38,19 +38,16 @@ const promptedKey = (userId: string) => `password_setup_prompted_${userId}`;
 
 /**
  * 비밀번호 설정 팝업 표시 여부를 판단합니다.
- * - Google 로그인(provider === 'google')은 제외
- * - user_metadata.has_password가 true인 경우 제외
+ * - app_metadata.providers에 'email'이 포함된 경우(이미 비밀번호 로그인 가능) 제외
  * - 이미 팝업을 본 경우(localStorage) 제외
  */
 function shouldShowPasswordPrompt(user: ReturnType<typeof useAuth>['user']): boolean {
   if (!user) return false;
 
-  const provider = user.app_metadata?.provider as string | undefined;
-  // Google OAuth 유저는 비밀번호 프롬프트 불필요
-  if (provider === 'google') return false;
+  const providers = (user.app_metadata?.providers ?? []) as string[];
 
-  // 이미 비밀번호를 설정한 유저는 제외
-  if (user.user_metadata?.has_password === true) return false;
+  // 이미 이메일/비밀번호 로그인이 가능한 유저는 제외
+  if (providers.includes('email')) return false;
 
   // 이미 한 번 팝업을 봤으면 제외
   if (localStorage.getItem(promptedKey(user.id)) === 'true') return false;
@@ -204,8 +201,6 @@ export function AuthCallbackPage() {
   useEffect(() => {
     const tokenHash = searchParams.get('token_hash');
     const type = searchParams.get('type') as 'email' | 'magiclink' | null;
-
-    console.log([...searchParams.entries()], tokenHash, type);
 
     // Case 1: Custom email template sends token_hash — verify manually
     if (tokenHash) {

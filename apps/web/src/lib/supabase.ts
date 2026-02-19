@@ -45,7 +45,7 @@ export const supabase: SupabaseClient<Database> = createClient<Database>(
     },
     global: {
       fetch: (...args) => {
-        console.log('FETCH:', args);
+        console.debug('FETCH:', args);
         return fetch(...args);
       },
     },

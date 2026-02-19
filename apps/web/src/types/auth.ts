@@ -13,7 +13,7 @@ export interface AuthContextType {
   signInWithMagicLink: (email: string) => Promise<void>;
   /** Sign in with Google OAuth (redirects to Google consent screen) */
   signInWithGoogle: () => Promise<void>;
-  /** Update the current user's password and mark has_password in metadata */
+  /** Update the current user's password (Supabase automatically adds 'email' to providers) */
   updatePassword: (password: string) => Promise<void>;
   /** Sign out current user */
   signOut: () => Promise<void>;
