@@ -84,7 +84,7 @@ export const booksMessages = {
     backToList: '목록으로',
     manualInput: '직접 입력하기',
     editBook: '수정하기',
-    recordToday: '오늘 독서',
+    recordToday: '독서 기록 추가',
     markAsCompleted: '완독 처리',
     deleteRecord: '기록 삭제',
     clearRating: '평점 삭제',
@@ -130,6 +130,7 @@ export const booksMessages = {
     noFeedBooks: '피드에 표시할 도서가 없습니다.',
     noEditPermission: '본인의 독서 기록만 편집할 수 있습니다.',
     titleAuthorRequired: '제목과 저자는 필수입니다',
+    noReadingDates: '독서 기간이 없습니다.',
   },
 
   // Confirmations
@@ -156,5 +157,16 @@ export const booksMessages = {
     reflectionAdded: '감상이 추가되었습니다.',
     recordSaved: '오늘 독서 기록이 저장되었습니다.',
     bookMarkedCompleted: '완독으로 처리되었습니다.',
+  },
+
+  // Mobile log flow (multi-step page-replacement UI)
+  logFlow: {
+    title: '오늘 독서 기록',
+    date: '독서 날짜',
+    reviewFormTitle: '감상 작성',
+    quoteFormTitle: '인용구 작성',
+    completedTitle: '기록 완료!',
+    viewDetail: '상세 보기',
+    addEntry: '항목 추가',
   },
 } as const;

@@ -44,6 +44,13 @@ export const commonMessages = {
     unsavedChanges: '변경사항이 저장되지 않습니다. 나가시겠습니까?',
   },
 
+  // Unsaved-changes guard dialog
+  guard: {
+    title: '저장하지 않은 변경사항',
+    cancel: '계속 작성',
+    confirm: '나가기',
+  },
+
   // Common errors
   errors: {
     failedToSave: '저장에 실패했습니다',

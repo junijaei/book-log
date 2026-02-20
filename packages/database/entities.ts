@@ -82,7 +82,7 @@ export type Friendship = Tables<"friendships">;
 // =============================================================================
 
 /** User profile summary (embedded in ReadingRecord responses) */
-export type UserProfile = Pick<Profile, "nickname" | "avatar_url">;
+export type UserProfile = Pick<Profile, "nickname" | "avatar_url" | "id">;
 
 /** Profile info (public-facing subset with bio) */
 export type ProfileInfo = Pick<

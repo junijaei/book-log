@@ -55,7 +55,7 @@ const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
             {date ? format(date, 'PPP', { locale: ko }) : <span>{placeholder}</span>}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0 z-[100]" align="start">
           <Calendar mode="single" selected={date} onSelect={handleSelect} />
         </PopoverContent>
       </Popover>
