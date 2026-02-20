@@ -215,21 +215,19 @@ async function handleGetList(
 
   const readingLogIds = readingLogsWithBooks.map((rl: { id: string }) => rl.id);
 
-  const [
-    { data: allQuotes, error: quotesError },
-    { data: allReviews, error: reviewsError },
-  ] = await Promise.all([
-    supabase
-      .from('quotes')
-      .select('*')
-      .in('reading_log_id', readingLogIds)
-      .order('page_number', { ascending: true }),
-    supabase
-      .from('reviews')
-      .select('*')
-      .in('reading_log_id', readingLogIds)
-      .order('created_at', { ascending: false }),
-  ]);
+  const [{ data: allQuotes, error: quotesError }, { data: allReviews, error: reviewsError }] =
+    await Promise.all([
+      supabase
+        .from('quotes')
+        .select('*')
+        .in('reading_log_id', readingLogIds)
+        .order('page_number', { ascending: true }),
+      supabase
+        .from('reviews')
+        .select('*')
+        .in('reading_log_id', readingLogIds)
+        .order('created_at', { ascending: false }),
+    ]);
 
   if (quotesError) {
     console.error('Quotes query error:', quotesError);
@@ -255,33 +253,35 @@ async function handleGetList(
     reviewsByLogId.set(review.reading_log_id, existing);
   }
 
-  const records: ReadingRecord[] = readingLogsWithBooks.map((row: ReadingLog & Record<string, unknown>) => {
-    const book = row.books as unknown as Book;
-    const profile = row.profiles as { nickname: string; avatar_url: string | null } | null;
+  const records: ReadingRecord[] = readingLogsWithBooks.map(
+    (row: ReadingLog & Record<string, unknown>) => {
+      const book = row.books as unknown as Book;
+      const profile = row.profiles as { nickname: string; avatar_url: string | null } | null;
 
-    const readingLog: ReadingLog = {
-      id: row.id,
-      book_id: row.book_id,
-      status: row.status,
-      current_page: row.current_page,
-      rating: row.rating,
-      start_date: row.start_date,
-      end_date: row.end_date,
-      visibility: row.visibility,
-      notion_page_id: row.notion_page_id,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-      user_id: row.user_id,
-    };
+      const readingLog: ReadingLog = {
+        id: row.id,
+        book_id: row.book_id,
+        status: row.status,
+        current_page: row.current_page,
+        rating: row.rating,
+        start_date: row.start_date,
+        end_date: row.end_date,
+        visibility: row.visibility,
+        notion_page_id: row.notion_page_id,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        user_id: row.user_id,
+      };
 
-    return {
-      book,
-      reading_log: readingLog,
-      quotes: quotesByLogId.get(row.id) || [],
-      reviews: reviewsByLogId.get(row.id) || [],
-      profile,
-    };
-  });
+      return {
+        book,
+        reading_log: readingLog,
+        quotes: quotesByLogId.get(row.id) || [],
+        reviews: reviewsByLogId.get(row.id) || [],
+        profile,
+      };
+    }
+  );
 
   return successResponse(records, {
     limit,
@@ -359,21 +359,19 @@ async function handleGetOne(
   // Fetch Quotes, Reviews & Transform
   // ========================================================================
 
-  const [
-    { data: quotes, error: quotesError },
-    { data: reviews, error: reviewsError },
-  ] = await Promise.all([
-    supabase
-      .from('quotes')
-      .select('*')
-      .eq('reading_log_id', id)
-      .order('page_number', { ascending: true }),
-    supabase
-      .from('reviews')
-      .select('*')
-      .eq('reading_log_id', id)
-      .order('created_at', { ascending: false }),
-  ]);
+  const [{ data: quotes, error: quotesError }, { data: reviews, error: reviewsError }] =
+    await Promise.all([
+      supabase
+        .from('quotes')
+        .select('*')
+        .eq('reading_log_id', id)
+        .order('page_number', { ascending: true }),
+      supabase
+        .from('reviews')
+        .select('*')
+        .eq('reading_log_id', id)
+        .order('created_at', { ascending: false }),
+    ]);
 
   if (quotesError) {
     console.error('Quotes query error:', quotesError);
@@ -473,6 +471,10 @@ async function handleCreate(
 
 // =============================================================================
 // PUT /reading-records — Upsert (Book + ReadingLog + Quotes + Reviews)
+//
+// Delegates to the `upsert_reading_record` PostgreSQL stored procedure so that
+// all mutations execute inside a single database transaction. Any failure
+// automatically rolls back every change made in that call.
 // =============================================================================
 
 interface UpsertPayload {
@@ -489,98 +491,19 @@ async function handleUpsert(
   userId: string,
   payload: UpsertPayload
 ): Promise<Response> {
-  let bookId = payload.book?.id;
+  const { data, error } = await supabase.rpc('upsert_reading_record', {
+    p_user_id: userId,
+    p_payload: payload,
+  });
 
-  if (payload.book) {
-    const { data, error } = await supabase
-      .from('books')
-      .upsert({ ...payload.book, user_id: userId }, { onConflict: 'id' })
-      .select()
-      .single();
-    if (error) return errorResponse(error.message, 500);
-    bookId = data.id;
+  if (error) {
+    console.error('upsert_reading_record RPC error:', error);
+    const isOwnershipError =
+      error.message.includes('not found') || error.message.includes('not owned');
+    return errorResponse(error.message, isOwnershipError ? 404 : 500);
   }
 
-  let readingLogId = payload.reading_log?.id;
-
-  if (payload.reading_log) {
-    const base = { ...payload.reading_log, book_id: bookId, user_id: userId };
-
-    if (readingLogId) {
-      const { data: existing } = await supabase
-        .from('reading_logs')
-        .select('user_id')
-        .eq('id', readingLogId)
-        .single();
-
-      if (!existing || existing.user_id !== userId) {
-        return errorResponse('Reading log not found or not owned by you', 404);
-      }
-
-      const { data, error } = await supabase
-        .from('reading_logs')
-        .update(base)
-        .eq('id', readingLogId)
-        .select()
-        .single();
-      if (error) return errorResponse(error.message, 500);
-      readingLogId = data.id;
-    } else {
-      const { data, error } = await supabase.from('reading_logs').insert(base).select().single();
-      if (error) return errorResponse(error.message, 500);
-      readingLogId = data.id;
-    }
-  }
-
-  // Handle Quotes
-  if (payload.quotes?.length) {
-    const insertQuotes = payload.quotes
-      .filter((q) => !q.id)
-      .map((q) => ({ ...q, reading_log_id: readingLogId, user_id: userId }));
-    const updateQuotes = payload.quotes.filter((q) => q.id);
-
-    if (insertQuotes.length) {
-      const { error } = await supabase.from('quotes').insert(insertQuotes);
-      if (error) return errorResponse(error.message, 500);
-    }
-
-    for (const q of updateQuotes) {
-      const { id, ...rest } = q;
-      const { error } = await supabase.from('quotes').update(rest).eq('id', id);
-      if (error) return errorResponse(error.message, 500);
-    }
-  }
-
-  if (payload.delete_quote_ids?.length) {
-    const { error } = await supabase.from('quotes').delete().in('id', payload.delete_quote_ids);
-    if (error) return errorResponse(error.message, 500);
-  }
-
-  // Handle Reviews
-  if (payload.reviews?.length) {
-    const insertReviews = payload.reviews
-      .filter((r) => !r.id)
-      .map((r) => ({ ...r, reading_log_id: readingLogId, user_id: userId }));
-    const updateReviews = payload.reviews.filter((r) => r.id);
-
-    if (insertReviews.length) {
-      const { error } = await supabase.from('reviews').insert(insertReviews);
-      if (error) return errorResponse(error.message, 500);
-    }
-
-    for (const r of updateReviews) {
-      const { id, ...rest } = r;
-      const { error } = await supabase.from('reviews').update(rest).eq('id', id);
-      if (error) return errorResponse(error.message, 500);
-    }
-  }
-
-  if (payload.delete_review_ids?.length) {
-    const { error } = await supabase.from('reviews').delete().in('id', payload.delete_review_ids);
-    if (error) return errorResponse(error.message, 500);
-  }
-
-  return successResponse({ book_id: bookId, reading_log_id: readingLogId });
+  return successResponse(data);
 }
 
 // =============================================================================
