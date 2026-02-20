@@ -8,6 +8,16 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -690,39 +700,38 @@ function FriendsSection() {
         </CardContent>
       </Card>
 
-      <Dialog open={!!confirmDialog} onOpenChange={open => !open && setConfirmDialog(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-base">
+      <AlertDialog open={!!confirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
               {confirmDialog?.type === 'remove'
                 ? messages.friends.buttons.removeFriend
                 : messages.friends.buttons.block}
-            </DialogTitle>
-            <DialogDescription className="text-sm">
+            </AlertDialogTitle>
+            <AlertDialogDescription>
               {confirmDialog?.type === 'remove'
                 ? messages.friends.confirmations.removeFriend
                 : messages.friends.confirmations.block}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setConfirmDialog(null)}>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmDialog(null)}>
               {messages.common.buttons.cancel}
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
+            </AlertDialogCancel>
+            <AlertDialogAction
               onClick={handleConfirm}
               disabled={deleteFriendshipMutation.isPending || blockUserMutation.isPending}
+              className="bg-destructive text-white hover:bg-destructive/90"
             >
               {deleteFriendshipMutation.isPending || blockUserMutation.isPending
                 ? messages.common.states.loading
                 : confirmDialog?.type === 'remove'
                   ? messages.friends.buttons.remove
                   : messages.friends.buttons.block}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

@@ -15,9 +15,18 @@ import { StatusBadge } from '@/components/status-badge';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -1146,30 +1155,30 @@ export function BookDetailPage() {
         </Drawer.Portal>
       </Drawer.Root>
 
-      {/* ── Completion dialog ── */}
-      <Dialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{messages.books.confirmations.bookCompletedTitle}</DialogTitle>
-            <DialogDescription>{messages.books.confirmations.bookCompleted}</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              size="sm"
+      {/* ── Completion alert ── */}
+      <AlertDialog open={showCompletionDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{messages.books.confirmations.bookCompletedTitle}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {messages.books.confirmations.bookCompleted}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
               onClick={() => setShowCompletionDialog(false)}
               disabled={upsertMutation.isPending}
             >
               {messages.common.buttons.cancel}
-            </Button>
-            <Button size="sm" onClick={handleMarkCompleted} disabled={upsertMutation.isPending}>
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleMarkCompleted} disabled={upsertMutation.isPending}>
               {upsertMutation.isPending
                 ? messages.common.states.loading
                 : messages.books.buttons.markAsCompleted}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ── Edit quote dialog ── */}
       <Dialog open={!!editingQuote} onOpenChange={open => !open && setEditingQuote(null)}>
@@ -1221,37 +1230,34 @@ export function BookDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Delete quote dialog ── */}
-      <Dialog open={deleteQuoteDialogOpen} onOpenChange={setDeleteQuoteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-base">{messages.books.quotes.delete}</DialogTitle>
-            <DialogDescription className="text-sm">
+      {/* ── Delete quote alert ── */}
+      <AlertDialog open={deleteQuoteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{messages.books.quotes.delete}</AlertDialogTitle>
+            <AlertDialogDescription>
               {messages.books.confirmations.deleteQuote}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              size="sm"
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
               onClick={() => setDeleteQuoteDialogOpen(false)}
               disabled={deleteQuoteMutation.isPending}
             >
               {messages.common.buttons.cancel}
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
+            </AlertDialogCancel>
+            <AlertDialogAction
               onClick={handleDeleteQuote}
               disabled={deleteQuoteMutation.isPending}
+              className="bg-destructive text-white hover:bg-destructive/90"
             >
               {deleteQuoteMutation.isPending
                 ? messages.common.buttons.deleting
                 : messages.common.buttons.delete}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ── Edit reflection dialog ── */}
       <Dialog open={!!editingReview} onOpenChange={open => !open && setEditingReview(null)}>
@@ -1289,71 +1295,63 @@ export function BookDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Delete reflection dialog ── */}
-      <Dialog open={deleteReviewDialogOpen} onOpenChange={setDeleteReviewDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-base">{messages.books.reflections.delete}</DialogTitle>
-            <DialogDescription className="text-sm">
+      {/* ── Delete reflection alert ── */}
+      <AlertDialog open={deleteReviewDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{messages.books.reflections.delete}</AlertDialogTitle>
+            <AlertDialogDescription>
               {messages.books.confirmations.deleteReflection}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              size="sm"
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
               onClick={() => setDeleteReviewDialogOpen(false)}
               disabled={deleteReviewMutation.isPending}
             >
               {messages.common.buttons.cancel}
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
+            </AlertDialogCancel>
+            <AlertDialogAction
               onClick={handleDeleteReview}
               disabled={deleteReviewMutation.isPending}
+              className="bg-destructive text-white hover:bg-destructive/90"
             >
               {deleteReviewMutation.isPending
                 ? messages.common.buttons.deleting
                 : messages.common.buttons.delete}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      {/* ── Delete reading record dialog ── */}
-      <Dialog open={deleteRecordDialogOpen} onOpenChange={setDeleteRecordDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-base">
-              {messages.books.confirmations.deleteTitle}
-            </DialogTitle>
-            <DialogDescription className="text-sm">
+      {/* ── Delete reading record alert ── */}
+      <AlertDialog open={deleteRecordDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{messages.books.confirmations.deleteTitle}</AlertDialogTitle>
+            <AlertDialogDescription>
               {messages.books.confirmations.deleteMessage}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              size="sm"
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
               onClick={() => setDeleteRecordDialogOpen(false)}
               disabled={deleteMutation.isPending}
             >
               {messages.common.buttons.cancel}
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
+            </AlertDialogCancel>
+            <AlertDialogAction
               onClick={handleDeleteRecord}
               disabled={deleteMutation.isPending}
+              className="bg-destructive text-white hover:bg-destructive/90"
             >
               {deleteMutation.isPending
                 ? messages.common.buttons.deleting
                 : messages.common.buttons.delete}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

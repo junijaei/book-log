@@ -106,7 +106,10 @@ export function QuickRecordResponsive({ record, open, onOpenChange }: QuickRecor
           <AlertDialogCancel onClick={handleCancelLeave}>
             {messages.common.guard.cancel}
           </AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirmLeave}>
+          <AlertDialogAction
+            onClick={handleConfirmLeave}
+            className="bg-destructive text-white hover:bg-destructive/90"
+          >
             {messages.common.guard.confirm}
           </AlertDialogAction>
         </AlertDialogFooter>
