@@ -1,12 +1,12 @@
-import { BookSearchInput } from '@/components/book-search-input';
 import { BookCover } from '@/components/book-cover';
+import { BookSearchInput } from '@/components/book-search-input';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { useBookLookup, useCreateBook, useIsMobile } from '@/hooks';
+import { Input } from '@/components/ui/input';
 import { messages } from '@/constants/messages';
+import { useBookLookup, useCreateBook, useIsMobile } from '@/hooks';
 import type { AladinBook, BookFormData } from '@/types';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import { useState } from 'react';
@@ -227,6 +227,20 @@ function MobileView() {
         author: resolvedBook.author,
         cover_image_url: resolvedBook.cover || null,
         total_pages: resolvedBook.totalPages ?? null,
+      });
+      navigate(`/books/${response.reading_log.id}`);
+    } catch {
+      toast.error(messages.common.errors.failedToCreate);
+    }
+  }
+
+  async function handleSubmitFromForm(data: BookFormData) {
+    try {
+      const response = await createBookMutation.mutateAsync({
+        title: data.title,
+        author: data.author,
+        cover_image_url: data.cover_image_url || null,
+        total_pages: data.total_pages ? parseInt(data.total_pages) : null,
       });
       navigate(`/books/${response.reading_log.id}`);
     } catch {
