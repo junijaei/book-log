@@ -6,12 +6,12 @@
  */
 
 import { supabase } from '@/lib/supabase';
-import { ApiError, type EdgeFunctionErrorResponse } from './errors';
 import {
+  FunctionsFetchError,
   FunctionsHttpError,
   FunctionsRelayError,
-  FunctionsFetchError,
 } from '@supabase/supabase-js';
+import { ApiError, type EdgeFunctionErrorResponse } from './errors';
 
 /**
  * Makes an authenticated request to a Supabase Edge Function.

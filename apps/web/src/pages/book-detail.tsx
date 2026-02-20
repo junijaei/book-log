@@ -8,6 +8,7 @@
 
 import { BookCover } from '@/components/book-cover';
 import { DateRangeDisplay } from '@/components/date-range-display';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { EmptyState } from '@/components/empty-state';
 import { BookDetailSkeleton } from '@/components/skeletons';
 import { StatusBadge } from '@/components/status-badge';
@@ -37,6 +38,7 @@ import {
   useDeleteQuote,
   useDeleteReadingRecord,
   useDeleteReview,
+  useIsMobile,
   useReadingRecord,
   useUpdateQuote,
   useUpdateReview,
@@ -58,6 +60,7 @@ import { useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
+import { Drawer } from 'vaul';
 
 const READING_STATUSES: ReadingStatus[] = ['want_to_read', 'reading', 'finished', 'abandoned'];
 
@@ -65,7 +68,7 @@ const READING_STATUSES: ReadingStatus[] = ['want_to_read', 'reading', 'finished'
 
 function buildPayload(
   record: ReadingRecord,
-  bookOverrides: Partial<{ title: string; author: string }> = {},
+  bookOverrides: Partial<{ title: string; author: string; total_pages: number | null }> = {},
   logOverrides: Partial<{
     status: ReadingStatus;
     current_page: number | null;
@@ -82,7 +85,11 @@ function buildPayload(
       title: bookOverrides.title ?? record.book.title,
       author: bookOverrides.author ?? record.book.author,
       cover_image_url: record.book.cover_image_url,
-      total_pages: record.book.total_pages,
+      // Use !== undefined so an explicit null clears the value
+      total_pages:
+        bookOverrides.total_pages !== undefined
+          ? bookOverrides.total_pages
+          : record.book.total_pages,
     },
     reading_log: {
       id: record.reading_log.id,
@@ -92,8 +99,13 @@ function buildPayload(
           ? logOverrides.current_page
           : record.reading_log.current_page,
       rating: logOverrides.rating !== undefined ? logOverrides.rating : record.reading_log.rating,
-      start_date: logOverrides.start_date ?? record.reading_log.start_date,
-      end_date: logOverrides.end_date ?? record.reading_log.end_date,
+      // Use !== undefined so explicit null clears the date
+      start_date:
+        logOverrides.start_date !== undefined
+          ? logOverrides.start_date
+          : record.reading_log.start_date,
+      end_date:
+        logOverrides.end_date !== undefined ? logOverrides.end_date : record.reading_log.end_date,
       review: logOverrides.review !== undefined ? logOverrides.review : record.reading_log.review,
       visibility: (logOverrides.visibility ??
         record.reading_log.visibility ??
@@ -107,6 +119,7 @@ export function BookDetailPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: record, isLoading } = useReadingRecord(id);
+  const isMobile = useIsMobile();
 
   // ── Mutations ──
   const upsertMutation = useUpsertReadingRecord();
@@ -124,8 +137,12 @@ export function BookDetailPage() {
   const [editTitle, setEditTitle] = useState('');
   const [editAuthor, setEditAuthor] = useState('');
   const [editCurrentPage, setEditCurrentPage] = useState('');
+  const [editTotalPages, setEditTotalPages] = useState('');
   const [editRating, setEditRating] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // ── Field picker drawer (mobile, non-keyboard fields) ──
+  const [drawerField, setDrawerField] = useState<'status' | 'rating' | null>(null);
 
   // ── Completion dialog ──
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
@@ -158,6 +175,7 @@ export function BookDetailPage() {
     if (field === 'title') setEditTitle(initialValue);
     else if (field === 'author') setEditAuthor(initialValue);
     else if (field === 'current_page') setEditCurrentPage(initialValue);
+    else if (field === 'total_pages') setEditTotalPages(initialValue);
     else if (field === 'rating') setEditRating(initialValue);
     setTimeout(() => {
       inputRef.current?.focus();
@@ -168,6 +186,11 @@ export function BookDetailPage() {
 
   const handleSaveTitle = async () => {
     if (!record || !editTitle.trim()) {
+      cancelEdit();
+      return;
+    }
+    // Skip API call if nothing changed
+    if (editTitle.trim() === record.book.title) {
       cancelEdit();
       return;
     }
@@ -186,6 +209,11 @@ export function BookDetailPage() {
 
   const handleSaveAuthor = async () => {
     if (!record || !editAuthor.trim()) {
+      cancelEdit();
+      return;
+    }
+    // Skip API call if nothing changed
+    if (editAuthor.trim() === record.book.author) {
       cancelEdit();
       return;
     }
@@ -234,6 +262,11 @@ export function BookDetailPage() {
     const newPage = totalPages ? Math.min(parsed, totalPages) : parsed;
     const previousPage = record.reading_log.current_page ?? 0;
     const isAlreadyFinished = record.reading_log.status === 'finished';
+    // Skip API call if nothing changed (compare clamped value against stored value)
+    if (newPage === previousPage) {
+      cancelEdit();
+      return;
+    }
     setSavingField('current_page');
     try {
       await upsertMutation.mutateAsync(buildPayload(record, {}, { current_page: newPage }));
@@ -268,13 +301,9 @@ export function BookDetailPage() {
     }
   };
 
-  const handleSaveRating = async () => {
-    if (!record) {
-      cancelEdit();
-      return;
-    }
-    const parsed = parseInt(editRating);
-    const newRating = isNaN(parsed) ? null : Math.min(5, Math.max(1, parsed));
+  // Shared core — called by both the mobile drawer picker and the desktop keyboard input.
+  const handleSaveRatingValue = async (newRating: number | null) => {
+    if (!record) return;
     setSavingField('rating');
     try {
       await upsertMutation.mutateAsync(buildPayload(record, {}, { rating: newRating }));
@@ -284,7 +313,68 @@ export function BookDetailPage() {
       toast.error(messages.common.errors.failedToSave);
     } finally {
       setSavingField(null);
+    }
+  };
+
+  // Desktop keyboard variant — parses from editRating state then delegates.
+  const handleSaveRating = async () => {
+    if (!record) {
       cancelEdit();
+      return;
+    }
+    const parsed = parseInt(editRating);
+    const newRating = isNaN(parsed) ? null : Math.min(5, Math.max(1, parsed));
+    // Skip API call if nothing changed (both null, or same integer)
+    if (newRating === (record.reading_log.rating ?? null)) {
+      cancelEdit();
+      return;
+    }
+    await handleSaveRatingValue(newRating);
+    cancelEdit();
+  };
+
+  const handleSaveTotalPages = async () => {
+    if (!record) {
+      cancelEdit();
+      return;
+    }
+    const parsed = parseInt(editTotalPages);
+    // Treat 0 or non-numeric as clearing total_pages
+    const newTotal = isNaN(parsed) || parsed <= 0 ? null : parsed;
+    // Skip API call if nothing changed
+    if (newTotal === (record.book.total_pages ?? null)) {
+      cancelEdit();
+      return;
+    }
+    setSavingField('total_pages');
+    try {
+      await upsertMutation.mutateAsync(buildPayload(record, { total_pages: newTotal }));
+      toast.success(messages.common.success.savedSuccessfully);
+    } catch (error) {
+      console.error('Failed to save total pages:', error);
+      toast.error(messages.common.errors.failedToSave);
+    } finally {
+      setSavingField(null);
+      cancelEdit();
+    }
+  };
+
+  const handleSaveDateRange = async (newStart: string | null, newEnd: string | null) => {
+    if (!record) return;
+    // Skip if neither value changed
+    if (newStart === record.reading_log.start_date && newEnd === record.reading_log.end_date)
+      return;
+    setSavingField('date_range');
+    try {
+      await upsertMutation.mutateAsync(
+        buildPayload(record, {}, { start_date: newStart, end_date: newEnd })
+      );
+      toast.success(messages.common.success.savedSuccessfully);
+    } catch (error) {
+      console.error('Failed to save date range:', error);
+      toast.error(messages.common.errors.failedToSave);
+    } finally {
+      setSavingField(null);
     }
   };
 
@@ -521,26 +611,39 @@ export function BookDetailPage() {
                   )}
                 </div>
 
-                {/* Status — inline editable via Select */}
+                {/* Status — drawer picker on mobile / Select dropdown on desktop */}
                 <div className="flex items-center gap-1">
                   {isOwner ? (
-                    <Select
-                      value={reading_log.status}
-                      onValueChange={v => handleSaveStatus(v as ReadingStatus)}
-                    >
-                      <SelectTrigger className="w-auto h-auto py-0.5 px-2 text-xs border-0 bg-transparent p-0 [&>svg]:hidden focus:ring-0 focus:ring-offset-0 shadow-none">
-                        <SelectValue>
-                          <StatusBadge status={reading_log.status} />
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {READING_STATUSES.map(status => (
-                          <SelectItem key={status} value={status}>
-                            {getReadingStatusLabel(status)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    isMobile ? (
+                      // Mobile: no keyboard needed → Vaul bottom sheet
+                      <button
+                        type="button"
+                        onClick={() => setDrawerField('status')}
+                        className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                        aria-label={messages.books.fields.status}
+                      >
+                        <StatusBadge status={reading_log.status} />
+                      </button>
+                    ) : (
+                      // Desktop: inline Select is fine with a pointer
+                      <Select
+                        value={reading_log.status}
+                        onValueChange={v => handleSaveStatus(v as ReadingStatus)}
+                      >
+                        <SelectTrigger className="w-auto h-auto py-0.5 px-2 text-xs border-0 bg-transparent p-0 [&>svg]:hidden focus:ring-0 focus:ring-offset-0 shadow-none">
+                          <SelectValue>
+                            <StatusBadge status={reading_log.status} />
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {READING_STATUSES.map(status => (
+                            <SelectItem key={status} value={status}>
+                              {getReadingStatusLabel(status)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )
                   ) : (
                     <StatusBadge status={reading_log.status} />
                   )}
@@ -552,45 +655,124 @@ export function BookDetailPage() {
 
               {/* Metadata row */}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm text-muted-foreground">
-                {/* Current page — inline editable */}
-                {book.total_pages && (
-                  <span>
-                    {editingField === 'current_page' ? (
+                {/* Current page / Total pages — each editable independently for owner */}
+                {(book.total_pages != null || isOwner) && (
+                  <span className="flex items-center gap-1">
+                    {/* Current page — shown only when total pages is known */}
+                    {book.total_pages != null && (
+                      <>
+                        {editingField === 'current_page' ? (
+                          <Input
+                            ref={inputRef}
+                            type="number"
+                            value={editCurrentPage}
+                            onChange={e => setEditCurrentPage(e.target.value)}
+                            onBlur={handleSaveCurrentPage}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') handleSaveCurrentPage();
+                              if (e.key === 'Escape') cancelEdit();
+                            }}
+                            className="inline-block w-16 h-6 py-0 px-1 text-sm"
+                            aria-label={messages.books.fields.currentPage}
+                          />
+                        ) : (
+                          <span
+                            className={
+                              isOwner
+                                ? 'cursor-pointer hover:text-foreground transition-colors'
+                                : ''
+                            }
+                            onClick={() =>
+                              isOwner &&
+                              startEdit('current_page', reading_log.current_page?.toString() ?? '0')
+                            }
+                          >
+                            {reading_log.current_page ?? 0}
+                            {savingField === 'current_page' && (
+                              <Loader2 className="inline w-3 h-3 ml-1 animate-spin text-muted-foreground" />
+                            )}
+                          </span>
+                        )}
+                        <span className="text-muted-foreground/60">/</span>
+                      </>
+                    )}
+
+                    {/* Total pages — always editable for owner even when not yet set */}
+                    {editingField === 'total_pages' ? (
                       <Input
                         ref={inputRef}
                         type="number"
-                        value={editCurrentPage}
-                        onChange={e => setEditCurrentPage(e.target.value)}
-                        onBlur={handleSaveCurrentPage}
+                        value={editTotalPages}
+                        onChange={e => setEditTotalPages(e.target.value)}
+                        onBlur={handleSaveTotalPages}
                         onKeyDown={e => {
-                          if (e.key === 'Enter') handleSaveCurrentPage();
+                          if (e.key === 'Enter') handleSaveTotalPages();
                           if (e.key === 'Escape') cancelEdit();
                         }}
                         className="inline-block w-20 h-6 py-0 px-1 text-sm"
-                        aria-label={messages.books.fields.currentPage}
+                        aria-label={messages.books.fields.totalPages}
                       />
                     ) : (
                       <span
                         className={
-                          isOwner ? 'cursor-pointer hover:text-foreground transition-colors' : ''
+                          isOwner
+                            ? 'cursor-pointer hover:text-foreground transition-colors' +
+                              (book.total_pages == null ? ' text-xs text-muted-foreground/50' : '')
+                            : ''
                         }
                         onClick={() =>
-                          isOwner &&
-                          startEdit('current_page', reading_log.current_page?.toString() ?? '0')
+                          isOwner && startEdit('total_pages', book.total_pages?.toString() ?? '')
                         }
                       >
-                        {reading_log.current_page ?? 0}/{book.total_pages}p (
-                        {Math.round(((reading_log.current_page ?? 0) / book.total_pages) * 100)}%)
-                        {savingField === 'current_page' && (
+                        {book.total_pages != null
+                          ? `${book.total_pages}p`
+                          : messages.books.fields.totalPages}
+                        {savingField === 'total_pages' && (
                           <Loader2 className="inline w-3 h-3 ml-1 animate-spin text-muted-foreground" />
                         )}
                       </span>
                     )}
+
+                    {/* Progress % — hidden while editing either field */}
+                    {book.total_pages != null &&
+                      book.total_pages > 0 &&
+                      editingField !== 'current_page' &&
+                      editingField !== 'total_pages' && (
+                        <span>
+                          ({Math.round(((reading_log.current_page ?? 0) / book.total_pages) * 100)}
+                          %)
+                        </span>
+                      )}
                   </span>
                 )}
 
-                {/* Rating — inline editable */}
-                {editingField === 'rating' ? (
+                {/* Rating — drawer picker on mobile / inline number input on desktop */}
+                {isMobile ? (
+                  // Mobile: no keyboard needed → Vaul bottom sheet
+                  isOwner ? (
+                    <button
+                      type="button"
+                      onClick={() => setDrawerField('rating')}
+                      className={
+                        'flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded' +
+                        (reading_log.rating
+                          ? ' text-amber-500'
+                          : ' text-xs text-muted-foreground/50')
+                      }
+                      aria-label={messages.books.fields.rating}
+                    >
+                      {reading_log.rating
+                        ? renderRatingStars(reading_log.rating)
+                        : messages.books.fields.rating}
+                      {savingField === 'rating' && (
+                        <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                      )}
+                    </button>
+                  ) : reading_log.rating ? (
+                    <span className="text-amber-500">{renderRatingStars(reading_log.rating)}</span>
+                  ) : null
+                ) : // Desktop: keyboard input inline
+                editingField === 'rating' ? (
                   <Input
                     ref={inputRef}
                     type="number"
@@ -631,11 +813,28 @@ export function BookDetailPage() {
                   </button>
                 ) : null}
 
-                <DateRangeDisplay
-                  startDate={reading_log.start_date}
-                  endDate={reading_log.end_date}
-                  variant="inline"
-                />
+                {/* Reading period — editable for owner, read-only for others */}
+                {isOwner ? (
+                  <span className="flex items-center gap-1">
+                    <DateRangePicker
+                      value={{
+                        from: reading_log.start_date ?? undefined,
+                        to: reading_log.end_date ?? undefined,
+                      }}
+                      onChange={({ from, to }) => handleSaveDateRange(from ?? null, to ?? null)}
+                      disabled={savingField === 'date_range'}
+                    />
+                    {savingField === 'date_range' && (
+                      <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                    )}
+                  </span>
+                ) : (
+                  <DateRangeDisplay
+                    startDate={reading_log.start_date}
+                    endDate={reading_log.end_date}
+                    variant="inline"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -865,6 +1064,87 @@ export function BookDetailPage() {
           </div>
         )}
       </main>
+
+      {/* ── Field picker drawer (mobile only — non-keyboard fields: status, rating) ── */}
+      <Drawer.Root open={drawerField !== null} onOpenChange={open => !open && setDrawerField(null)}>
+        <Drawer.Portal>
+          <Drawer.Overlay className="fixed inset-0 z-40 bg-black/40" />
+          <Drawer.Content
+            className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-background"
+            aria-describedby={undefined}
+          >
+            <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-muted" />
+            <div className="p-4 pt-3">
+              {drawerField === 'status' && (
+                <>
+                  <Drawer.Title className="text-base font-semibold mb-4">
+                    {messages.books.fields.status}
+                  </Drawer.Title>
+                  <div className="space-y-1">
+                    {READING_STATUSES.map(status => (
+                      <button
+                        key={status}
+                        type="button"
+                        className={
+                          'w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors' +
+                          (reading_log.status === status
+                            ? ' bg-primary/10 text-primary'
+                            : ' hover:bg-muted')
+                        }
+                        onClick={() => {
+                          handleSaveStatus(status);
+                          setDrawerField(null);
+                        }}
+                      >
+                        {getReadingStatusLabel(status)}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {drawerField === 'rating' && (
+                <>
+                  <Drawer.Title className="text-base font-semibold mb-4">
+                    {messages.books.fields.rating}
+                  </Drawer.Title>
+                  <div className="space-y-1">
+                    {([5, 4, 3, 2, 1] as const).map(star => (
+                      <button
+                        key={star}
+                        type="button"
+                        className={
+                          'w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3' +
+                          (reading_log.rating === star ? ' bg-primary/10' : ' hover:bg-muted')
+                        }
+                        onClick={() => {
+                          handleSaveRatingValue(star);
+                          setDrawerField(null);
+                        }}
+                      >
+                        <span className="text-amber-500">{renderRatingStars(star)}</span>
+                        <span className="text-sm text-muted-foreground">{star}점</span>
+                      </button>
+                    ))}
+                    {reading_log.rating && (
+                      <button
+                        type="button"
+                        className="w-full text-left px-4 py-3 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors"
+                        onClick={() => {
+                          handleSaveRatingValue(null);
+                          setDrawerField(null);
+                        }}
+                      >
+                        {messages.books.buttons.clearRating}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
 
       {/* ── Completion dialog ── */}
       <Dialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog}>

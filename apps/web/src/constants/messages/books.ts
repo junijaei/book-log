@@ -87,6 +87,7 @@ export const booksMessages = {
     recordToday: '오늘 독서',
     markAsCompleted: '완독 처리',
     deleteRecord: '기록 삭제',
+    clearRating: '평점 삭제',
   },
 
   // Book search
