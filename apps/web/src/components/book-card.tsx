@@ -1,12 +1,14 @@
-import { formatDateRange } from '@/lib/constants';
 import { messages } from '@/constants/messages';
+import { useAuth } from '@/hooks/use-auth';
+import { formatDateRange } from '@/lib/constants';
 import type { ReadingRecord } from '@/types';
-import { BookOpenText, MessageSquareQuote } from 'lucide-react';
+import { MessageSquareQuote, MessageSquareText, NotebookPen, User } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BookCover } from './book-cover';
-import { StatusBadge } from './status-badge';
 import { QuickRecordResponsive } from './quick-record-responsive';
+import { StatusBadge } from './status-badge';
+import { Button } from './ui/button';
 
 interface BookCardProps {
   record: ReadingRecord;
@@ -14,16 +16,19 @@ interface BookCardProps {
 }
 
 export function BookCard({ record, showAuthor }: BookCardProps) {
-  const { book, reading_log, quotes, profile } = record;
+  const { book, reading_log, quotes, reviews, profile } = record;
   const [quickRecordOpen, setQuickRecordOpen] = useState(false);
+  const { user } = useAuth();
 
   const progress =
     book.total_pages && reading_log.current_page
       ? Math.round((reading_log.current_page / book.total_pages) * 100)
-      : null;
+      : 0;
 
   const dateRange = formatDateRange(reading_log.start_date, reading_log.end_date);
   const quoteCount = quotes.length;
+  const reviewCount = reviews.length;
+  const isMine = user?.id === reading_log?.user_id;
 
   return (
     <div className="relative group/card">
@@ -50,57 +55,72 @@ export function BookCard({ record, showAuthor }: BookCardProps) {
             </div>
 
             {/* 줄 2: 저자 + 상태 배지 + 피드용 닉네임 */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm text-muted-foreground truncate">{book.author}</span>
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <span className="text-sm text-muted-foreground truncate text-ellipsis shrink">
+                {book.author}
+              </span>
               <StatusBadge status={reading_log.status} />
-              {showAuthor && profile && (
-                <span className="text-xs text-muted-foreground/60">— {profile.nickname}</span>
-              )}
             </div>
 
             {/* 줄 3: 진행률 바 */}
-            {progress !== null && (
-              <div className="flex items-center gap-2 mt-0.5">
-                <div className="flex-1 bg-secondary rounded-full h-1.5">
-                  <div
-                    className="bg-primary h-1.5 rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-                <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
-                  {reading_log.current_page?.toLocaleString()} /{' '}
-                  {book.total_pages?.toLocaleString()}
-                  {messages.books.details.pagesUnit}&nbsp;{progress}%
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-2 mt-0.5">
+              {progress !== null && (
+                <>
+                  <div className="flex-1 bg-secondary rounded-full h-1.5">
+                    <div
+                      className="bg-primary h-1.5 rounded-full transition-all duration-700 ease-out"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
+                    {progress}%
+                  </span>
+                </>
+              )}
+              <span className="text-xs text-muted-foreground/70 basis-2/3 text-right">
+                {dateRange ? dateRange : messages.books.messages.noReadingDates}
+              </span>
+            </div>
+
+            <hr className="w-full mt-auto" />
 
             {/* 줄 4: 메타 + 오늘 독서 버튼 */}
-            <div className="flex items-center justify-between mt-auto pt-0.5">
+            <div className="flex items-center justify-between pt-0.5">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                {dateRange && <span className="text-xs text-muted-foreground/70">{dateRange}</span>}
-                {quoteCount > 0 && (
-                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/70">
-                    <MessageSquareQuote className="w-3 h-3" />
-                    {quoteCount}
-                  </span>
-                )}
+                {/* 인용구 수 */}
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/70">
+                  <MessageSquareQuote className="w-3 h-3" />
+                  {quoteCount}
+                </span>
+                {/* 감상문 수 */}
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/70">
+                  <MessageSquareText className="w-3 h-3" />
+                  {reviewCount}
+                </span>
               </div>
 
-              {/* 오늘 독서 버튼 — stops link navigation */}
-              <button
-                type="button"
-                onClick={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setQuickRecordOpen(true);
-                }}
-                aria-label={`${book.title} — ${messages.books.buttons.recordToday}`}
-                className="inline-flex items-center gap-1 shrink-0 text-xs text-muted-foreground hover:text-foreground hover:bg-muted px-2 py-1 rounded-md transition-colors"
-              >
-                <BookOpenText className="w-3.5 h-3.5" />
-                {messages.books.buttons.recordToday}
-              </button>
+              {isMine && !showAuthor && (
+                /* 오늘 독서 버튼 — stops link navigation */
+                <Button
+                  onClick={e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setQuickRecordOpen(true);
+                  }}
+                  aria-label={`${book.title} — ${messages.books.buttons.recordToday}`}
+                  size="sm"
+                  variant="secondary"
+                >
+                  <NotebookPen className="w-3.5 h-3.5" />
+                  {messages.books.buttons.recordToday}
+                </Button>
+              )}
+              {showAuthor && profile && (
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/70 whitespace-nowrap">
+                  <User className="w-3 h-3" />
+                  {profile.nickname}
+                </span>
+              )}
             </div>
           </div>
         </div>

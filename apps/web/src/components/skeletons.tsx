@@ -1,5 +1,6 @@
 import { messages } from '@/constants/messages';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Separator } from './ui/separator';
 import { Skeleton } from './ui/skeleton';
 
 export function BookCardSkeleton() {
@@ -16,17 +17,19 @@ export function BookCardSkeleton() {
           <Skeleton className="h-4 w-16 shrink-0" />
         </div>
         {/* 저자 + 상태 배지 */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-5 w-14 rounded-full" />
         </div>
         {/* 진행률 바 */}
-        <Skeleton className="h-1.5 w-full rounded-full mt-0.5" />
+        <div className="flex items-center justify-between gap-6">
+          <Skeleton className="h-2 w-1/3 rounded-full mt-0.5" />
+          <Skeleton className="h-2 w-2/3 rounded-full mt-0.5" />
+        </div>
         {/* 메타데이터 칩 */}
-        <div className="flex items-center gap-3 mt-auto pt-0.5">
-          <Skeleton className="h-3 w-24" />
-          <Skeleton className="h-3 w-10" />
-          <Skeleton className="h-3 w-10" />
+        <div className="flex items-center gap-3 mt-auto pt-3 border-t">
+          <Skeleton className="h-3 w-14" />
+          <Skeleton className="h-3 w-24 ml-auto" />
         </div>
       </div>
     </div>
@@ -103,13 +106,21 @@ export function ProfileSectionSkeleton() {
           <Skeleton className="h-8 w-24 rounded-md" />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <div className="flex items-center gap-4">
           <Skeleton className="w-16 h-16 rounded-full shrink-0" />
           <div className="space-y-2 flex-1">
             <Skeleton className="h-5 w-32" />
             <Skeleton className="h-4 w-48" />
           </div>
+        </div>
+        <Separator />
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm">{messages.auth.passwordSetup.newPasswordLabel}</p>
+            <Skeleton className="h-3 w-40" />
+          </div>
+          <Skeleton className="h-8 w-24 rounded-md" />
         </div>
       </CardContent>
     </Card>
