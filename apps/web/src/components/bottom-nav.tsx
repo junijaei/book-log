@@ -1,16 +1,16 @@
 import { messages } from '@/constants/messages';
 import { cn } from '@/lib/utils';
+import { Link, useRouterState } from '@tanstack/react-router';
 import { BookOpen, Rss, User } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
 
 const NAV_ITEMS = [
-  { to: '/', label: messages.common.navigation.myBooks, icon: BookOpen },
-  { to: '/feed', label: messages.common.navigation.feed, icon: Rss },
-  { to: '/mypage', label: messages.common.navigation.myPage, icon: User },
-] as const;
+  { to: '/' as const, label: messages.common.navigation.myBooks, icon: BookOpen },
+  { to: '/feed' as const, label: messages.common.navigation.feed, icon: Rss },
+  { to: '/mypage' as const, label: messages.common.navigation.myPage, icon: User },
+];
 
 export function BottomNav() {
-  const { pathname } = useLocation();
+  const pathname = useRouterState({ select: s => s.location.pathname });
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur-md safe-area-bottom">

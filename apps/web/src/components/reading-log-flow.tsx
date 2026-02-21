@@ -24,7 +24,7 @@ import type {
 import confetti from 'canvas-confetti';
 import { CheckCircle2, ChevronRight, Plus, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { DatePicker } from './ui/date-picker';
@@ -624,7 +624,7 @@ export function ReadingLogFlow({ record, onClose, onDirtyChange }: ReadingLogFlo
                 className="h-12"
                 onClick={() => {
                   onClose();
-                  navigate(`/books/${reading_log.id}`);
+                  void navigate({ to: '/books/$id', params: { id: reading_log.id } });
                 }}
               >
                 {messages.books.logFlow.viewDetail}

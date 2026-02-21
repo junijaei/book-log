@@ -66,10 +66,12 @@ import type {
 import confetti from 'canvas-confetti';
 import { Loader2, NotebookText, Quote as QuoteIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { getRouteApi, useNavigate, useRouter } from '@tanstack/react-router';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 import { Drawer } from 'vaul';
+
+const Route = getRouteApi('/_authenticated/books/$id');
 
 const READING_STATUSES: ReadingStatus[] = ['want_to_read', 'reading', 'finished', 'abandoned'];
 
@@ -124,9 +126,10 @@ function buildPayload(
 }
 
 export function BookDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = Route.useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const router = useRouter();
   const { data: record, isLoading } = useReadingRecord(id);
   const isMobile = useIsMobile();
 
@@ -487,7 +490,7 @@ export function BookDetailPage() {
     if (!id) return;
     try {
       await deleteMutation.mutateAsync({ reading_log_id: id });
-      navigate('/');
+      void navigate({ to: '/' });
     } catch (error) {
       console.error('Failed to delete reading record:', error);
       toast.error(messages.common.errors.failedToDelete);
@@ -504,11 +507,9 @@ export function BookDetailPage() {
         <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
           <div className="container mx-auto px-4 py-3 max-w-4xl">
             <div className="flex justify-between items-center">
-              <Link to="/">
-                <Button variant="ghost" size="sm">
-                  ← {messages.common.buttons.back}
-                </Button>
-              </Link>
+              <Button variant="ghost" size="sm" onClick={() => router.history.back()}>
+                ← {messages.common.buttons.back}
+              </Button>
               <ThemeToggle />
             </div>
           </div>
@@ -525,11 +526,9 @@ export function BookDetailPage() {
       <div className="min-h-screen">
         <div className="text-center py-12">
           <p className="text-sm text-muted-foreground mb-4">{messages.books.messages.notFound}</p>
-          <Link to="/">
-            <Button variant="outline" size="sm">
-              {messages.books.buttons.backToList}
-            </Button>
-          </Link>
+          <Button variant="outline" size="sm" onClick={() => router.history.back()}>
+            {messages.books.buttons.backToList}
+          </Button>
         </div>
       </div>
     );
@@ -543,11 +542,9 @@ export function BookDetailPage() {
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
         <div className="container mx-auto px-4 py-3 max-w-4xl">
           <div className="flex justify-between items-center">
-            <Link to="/">
-              <Button variant="ghost" size="sm">
-                ← {messages.common.buttons.back}
-              </Button>
-            </Link>
+            <Button variant="ghost" size="sm" onClick={() => router.history.back()}>
+              ← {messages.common.buttons.back}
+            </Button>
             <ThemeToggle />
           </div>
         </div>

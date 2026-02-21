@@ -14,6 +14,7 @@ import {
   onAuthStateChange,
 } from '@/api/auth';
 import { queryClient } from '@/lib/query-client';
+import { router } from '@/router';
 import type { AuthContextType } from '@/types/auth';
 import type { Session, User } from '@supabase/supabase-js';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
@@ -62,6 +63,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       setLoading(false);
+
+      void router.invalidate();
 
       if (event === 'SIGNED_OUT') {
         // 로그아웃 시 이전 유저 캐시 전체 제거

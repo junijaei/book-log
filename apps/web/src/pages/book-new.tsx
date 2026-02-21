@@ -11,7 +11,7 @@ import type { AladinBook, BookFormData } from '@/types';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
 type MobileStep = 'search' | 'confirm' | 'form';
@@ -228,7 +228,7 @@ function MobileView() {
         cover_image_url: resolvedBook.cover || null,
         total_pages: resolvedBook.totalPages ?? null,
       });
-      navigate(`/books/${response.reading_log.id}`);
+      void navigate({ to: '/books/$id', params: { id: response.reading_log.id } });
     } catch {
       toast.error(messages.common.errors.failedToCreate);
     }
@@ -242,7 +242,7 @@ function MobileView() {
         cover_image_url: data.cover_image_url || null,
         total_pages: data.total_pages ? parseInt(data.total_pages) : null,
       });
-      navigate(`/books/${response.reading_log.id}`);
+      void navigate({ to: '/books/$id', params: { id: response.reading_log.id } });
     } catch {
       toast.error(messages.common.errors.failedToCreate);
     }
@@ -384,7 +384,7 @@ function DesktopView() {
         cover_image_url: data.cover_image_url || null,
         total_pages: data.total_pages ? parseInt(data.total_pages) : null,
       });
-      navigate(`/books/${response.reading_log.id}`);
+      void navigate({ to: '/books/$id', params: { id: response.reading_log.id } });
     } catch {
       toast.error(messages.common.errors.failedToCreate);
     }

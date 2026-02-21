@@ -14,7 +14,7 @@ import { messages } from '@/constants/messages';
 import { getReadingStatusLabel } from '@/lib/constants';
 import type { ReadingRecordFilters, ReadingRecordSort, ReadingStatus } from '@/types';
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 
 type SortField = 'updated_at' | 'start_date' | 'end_date';
 

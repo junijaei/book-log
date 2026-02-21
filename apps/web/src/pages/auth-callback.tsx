@@ -28,7 +28,9 @@ import { useAuth } from '@/hooks/use-auth';
 import { messages } from '@/constants/messages';
 import { BookOpen, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { getRouteApi, useNavigate } from '@tanstack/react-router';
+
+const Route = getRouteApi('/auth/callback');
 import { toast } from 'sonner';
 
 type CallbackState = 'loading' | 'error' | 'ready';
@@ -198,17 +200,13 @@ export function AuthCallbackPage() {
 
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  // 비밀번호 팝업 여부 판단을 한 번만 수행하기 위한 ref
+  const { token_hash: tokenHash, type } = Route.useSearch();
   const promptChecked = useRef(false);
 
   useEffect(() => {
-    const tokenHash = searchParams.get('token_hash');
-    const type = searchParams.get('type') as 'email' | 'magiclink' | null;
-
     // Case 1: Custom email template sends token_hash — verify manually
     if (tokenHash) {
-      verifyOtpToken(tokenHash, type ?? 'email')
+      verifyOtpToken(tokenHash, (type as 'email' | 'magiclink') ?? 'email')
         .then(() => {
           setState('ready');
         })
@@ -249,13 +247,13 @@ export function AuthCallbackPage() {
       localStorage.setItem(promptedKey(user.id), 'true');
       setShowPasswordDialog(true);
     } else {
-      navigate('/', { replace: true });
+      void navigate({ to: '/', replace: true });
     }
   }, [user, state, navigate]);
 
   const handlePasswordDialogClose = () => {
     setShowPasswordDialog(false);
-    navigate('/', { replace: true });
+    void navigate({ to: '/', replace: true });
   };
 
   if (state === 'error') {
@@ -270,7 +268,12 @@ export function AuthCallbackPage() {
             {errorMessage ?? messages.auth.callback.errorDescription}
           </p>
         </div>
-        <Button variant="outline" onClick={() => navigate('/login', { replace: true })}>
+        <Button
+          variant="outline"
+          onClick={() =>
+            void navigate({ to: '/login', search: { redirect: undefined }, replace: true })
+          }
+        >
           {messages.auth.callback.goToLoginButton}
         </Button>
       </div>

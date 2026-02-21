@@ -15,11 +15,9 @@ import { messages } from '@/constants/messages';
 import { Mail, Send } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useState, type FormEvent } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { getRouteApi, useNavigate } from '@tanstack/react-router';
 
-interface LocationState {
-  from?: { pathname: string };
-}
+const Route = getRouteApi('/login');
 
 // =============================================================================
 // Google Icon SVG
@@ -166,9 +164,9 @@ function PasswordForm() {
 
   const { signIn } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
+  const search = Route.useSearch();
 
-  const from = (location.state as LocationState)?.from?.pathname || '/';
+  const from = search.redirect ?? '/';
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -177,7 +175,7 @@ function PasswordForm() {
 
     try {
       await signIn(email, password);
-      navigate(from, { replace: true });
+      await navigate({ to: from, replace: true });
     } catch (err) {
       console.error('Login error:', err);
       setError(err instanceof Error ? err.message : messages.auth.errors.loginFailed);

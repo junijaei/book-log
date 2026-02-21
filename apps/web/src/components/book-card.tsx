@@ -4,7 +4,7 @@ import { formatDateRange } from '@/lib/constants';
 import type { ReadingRecord } from '@/types';
 import { MessageSquareQuote, MessageSquareText, NotebookPen, User } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { BookCover } from './book-cover';
 import { QuickRecordResponsive } from './quick-record-responsive';
 import { StatusBadge } from './status-badge';
@@ -32,7 +32,7 @@ export function BookCard({ record, showAuthor }: BookCardProps) {
 
   return (
     <div className="relative group/card">
-      <Link to={`/books/${reading_log.id}`} className="block">
+      <Link to="/books/$id" params={{ id: reading_log.id }} className="block">
         <div className="flex gap-4 px-4 py-3.5 rounded-xl border bg-card hover:bg-accent/40 hover:border-accent transition-colors duration-150">
           {/* ── 표지 ── */}
           <div className="shrink-0 self-start mt-0.5">

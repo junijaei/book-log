@@ -1,13 +1,13 @@
 import { Button } from '@/components/ui/button';
+import { Link } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 
 interface EmptyStateProps {
   icon?: ReactNode;
   message: string;
   action?: {
     label: string;
-    to?: string;
+    to?: '/' | '/feed' | '/mypage' | '/books/new';
     onClick?: () => void;
   };
 }
