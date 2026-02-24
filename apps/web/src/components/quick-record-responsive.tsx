@@ -15,16 +15,7 @@ import { messages } from '@/constants/messages';
 import { useIsMobile } from '@/hooks';
 import type { ReadingRecord } from '@/types';
 import { useEffect, useState } from 'react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from './ui/alert-dialog';
+import { ConfirmDialog } from './confirm-dialog';
 import { Dialog, DialogContent } from './ui/dialog';
 import { ReadingLogFlow } from './reading-log-flow';
 
@@ -94,27 +85,19 @@ export function QuickRecordResponsive({ record, open, onOpenChange }: QuickRecor
     <ReadingLogFlow record={record} onClose={handleRequestClose} onDirtyChange={setIsDirty} />
   );
 
-  // ── Guard dialog (Radix AlertDialog — cannot dismiss via Escape/backdrop) ─
+  // ── Guard dialog ──────────────────────────────────────────────────────────
   const guard = (
-    <AlertDialog open={showGuard}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{messages.common.guard.title}</AlertDialogTitle>
-          <AlertDialogDescription>{messages.common.messages.unsavedChanges}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleCancelLeave}>
-            {messages.common.guard.cancel}
-          </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleConfirmLeave}
-            className="bg-destructive text-white hover:bg-destructive/90"
-          >
-            {messages.common.guard.confirm}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmDialog
+      open={showGuard}
+      onOpenChange={setShowGuard}
+      title={messages.common.guard.title}
+      description={messages.common.messages.unsavedChanges}
+      cancelLabel={messages.common.guard.cancel}
+      confirmLabel={messages.common.guard.confirm}
+      variant="warning"
+      onConfirm={handleConfirmLeave}
+      onCancel={handleCancelLeave}
+    />
   );
 
   // ── Mobile: full-viewport overlay ────────────────────────────────────────

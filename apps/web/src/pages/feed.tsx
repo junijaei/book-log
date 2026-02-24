@@ -1,5 +1,6 @@
 import { BookCardList } from '@/components/book-card-list';
 import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useInfiniteScroll, useReadingRecords } from '@/hooks';
 import { messages } from '@/constants/messages';
@@ -23,7 +24,7 @@ export function FeedPage() {
 
   const feedFilters = useMemo(() => ({ ...filters, scope }), [filters, scope]);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useReadingRecords(
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } = useReadingRecords(
     feedFilters,
     sort
   );
@@ -38,14 +39,12 @@ export function FeedPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
-        <div className="container mx-auto px-4 py-3 max-w-6xl">
-          <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold">{messages.books.pages.feed}</h1>
-            <ThemeToggle />
-          </div>
-
-          <div className="flex gap-1 mt-3 p-1 bg-muted rounded-lg">
+      <PageHeader
+        maxWidth="max-w-6xl"
+        left={<h1 className="text-xl font-bold">{messages.books.pages.feed}</h1>}
+        right={<ThemeToggle />}
+        tabs={
+          <div className="flex gap-1 p-1 bg-muted rounded-lg">
             {SCOPE_OPTIONS.map(opt => (
               <button
                 key={opt.value}
@@ -61,23 +60,29 @@ export function FeedPage() {
               </button>
             ))}
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <main className="container mx-auto px-4 py-4 max-w-6xl">
-        <BookCardList
-          records={records}
-          isLoading={isLoading}
-          isFetchingNextPage={isFetchingNextPage}
-          observerTarget={observerTarget}
-          showAuthor
-          emptyState={
-            <EmptyState
-              icon={<Rss size={48} strokeWidth={1} />}
-              message={messages.books.messages.noFeedBooks}
-            />
-          }
-        />
+        {isError ? (
+          <div className="py-12 flex flex-col items-center gap-3 text-muted-foreground">
+            <p className="text-sm">{messages.common.errors.failedToLoad}</p>
+          </div>
+        ) : (
+          <BookCardList
+            records={records}
+            isLoading={isLoading}
+            isFetchingNextPage={isFetchingNextPage}
+            observerTarget={observerTarget}
+            showAuthor
+            emptyState={
+              <EmptyState
+                icon={<Rss size={48} strokeWidth={1} />}
+                message={messages.books.messages.noFeedBooks}
+              />
+            }
+          />
+        )}
       </main>
     </div>
   );

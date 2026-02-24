@@ -63,4 +63,11 @@ export const commonMessages = {
   success: {
     savedSuccessfully: '저장되었습니다.',
   },
+  // Error pages
+  errorPages: {
+    notFoundTitle: '페이지를 찾을 수 없습니다',
+    notFoundBack: '메인 화면으로',
+    errorTitle: '문제가 발생했습니다',
+    errorBack: '메인 화면으로',
+  },
 } as const;

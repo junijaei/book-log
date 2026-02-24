@@ -75,6 +75,11 @@ export const friendsMessages = {
     searchMinLength: '2자 이상 입력하세요.',
   },
 
+  // Error messages
+  errors: {
+    requestFailed: '친구 요청에 실패했습니다.',
+  },
+
   // Success messages
   success: {
     requestSent: '친구 요청을 보냈습니다.',

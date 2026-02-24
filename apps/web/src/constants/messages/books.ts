@@ -45,6 +45,7 @@ export const booksMessages = {
     status: '읽기 상태',
     currentPage: '현재 페이지',
     rating: '평점 (1-5)',
+    ratingValue: (n: number) => `${n}점`,
     startDate: '시작일',
     endDate: '종료일',
     review: '감상문',
@@ -88,6 +89,8 @@ export const booksMessages = {
     markAsCompleted: '완독 처리',
     deleteRecord: '기록 삭제',
     clearRating: '평점 삭제',
+    showFilters: '검색/필터',
+    hideFilters: '필터 닫기',
   },
 
   // Book search
@@ -125,12 +128,14 @@ export const booksMessages = {
 
   // Messages
   messages: {
+    lookingUpPages: '페이지 조회 중...',
     empty: '도서를 찾을 수 없습니다.',
     notFound: '도서를 찾을 수 없습니다',
     noFeedBooks: '피드에 표시할 도서가 없습니다.',
     noEditPermission: '본인의 독서 기록만 편집할 수 있습니다.',
     titleAuthorRequired: '제목과 저자는 필수입니다',
     noReadingDates: '독서 기간이 없습니다.',
+    invalidPageCount: '페이지 수는 1 이상이어야 합니다',
   },
 
   // Confirmations
@@ -168,5 +173,8 @@ export const booksMessages = {
     completedTitle: '기록 완료!',
     viewDetail: '상세 보기',
     addEntry: '항목 추가',
+    reviewEntry: (n: number) => `감상 ${n}`,
+    quoteEntry: (n: number) => `인용구 ${n}`,
+    entryCount: (n: number) => `${n}개`,
   },
 } as const;

@@ -5,7 +5,8 @@ interface ProgressBarProps {
   currentPage: number | null;
   totalPages: number | null;
   showLabel?: boolean;
-  size?: 'sm' | 'md';
+  size?: 'xs' | 'sm' | 'md';
+  className?: string;
 }
 
 export function ProgressBar({
@@ -13,14 +14,15 @@ export function ProgressBar({
   totalPages,
   showLabel = true,
   size = 'md',
+  className,
 }: ProgressBarProps) {
   if (!currentPage || !totalPages) return null;
 
   const progress = Math.round((currentPage / totalPages) * 100);
-  const barHeight = size === 'sm' ? 'h-2' : 'h-2.5';
+  const barHeight = size === 'xs' ? 'h-1.5' : size === 'sm' ? 'h-2' : 'h-2.5';
 
   return (
-    <div>
+    <div className={className}>
       {showLabel && (
         <div className="flex justify-between text-sm mb-2">
           <span className="font-medium text-muted-foreground">

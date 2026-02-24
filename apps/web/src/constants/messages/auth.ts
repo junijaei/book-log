@@ -10,6 +10,8 @@
 export const authMessages = {
   // Login page
   login: {
+    appName: '독서 기록',
+    tagline: '읽은 책, 읽고 싶은 책을 한 곳에서 관리하세요',
     title: '로그인',
     description: '계정에 로그인하여 독서 기록을 관리하세요',
     emailLabel: '이메일',

@@ -1,5 +1,6 @@
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
 import type { ComponentPropsWithoutRef, ElementRef } from 'react';
 import { forwardRef } from 'react';
 
@@ -90,18 +91,31 @@ export const AlertDialogDescription = forwardRef<
 ));
 AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName;
 
+const alertDialogActionVariants = cva(
+  'inline-flex h-10 items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+  {
+    variants: {
+      variant: {
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        destructive: 'bg-destructive text-white hover:bg-destructive/90',
+        warning: 'bg-amber-500 text-white hover:bg-amber-600',
+      },
+    },
+    defaultVariants: { variant: 'default' },
+  }
+);
+
+interface AlertDialogActionProps
+  extends ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>,
+    VariantProps<typeof alertDialogActionVariants> {}
+
 export const AlertDialogAction = forwardRef<
   ElementRef<typeof AlertDialogPrimitive.Action>,
-  ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>
->(({ className, ...props }, ref) => (
+  AlertDialogActionProps
+>(({ className, variant, ...props }, ref) => (
   <AlertDialogPrimitive.Action
     ref={ref}
-    className={cn(
-      'inline-flex h-10 items-center justify-center rounded-md px-4 py-2 text-sm font-medium',
-      'bg-primary text-primary-foreground hover:bg-primary/90 transition-colors',
-      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-      className
-    )}
+    className={cn(alertDialogActionVariants({ variant }), className)}
     {...props}
   />
 ));

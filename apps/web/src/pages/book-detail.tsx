@@ -11,19 +11,11 @@ import { DateRangeDisplay } from '@/components/date-range-display';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { EmptyState } from '@/components/empty-state';
 import { BookDetailSkeleton } from '@/components/skeletons';
+import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/status-badge';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import {
   Dialog,
   DialogContent,
@@ -64,7 +56,7 @@ import type {
   Visibility,
 } from '@/types';
 import confetti from 'canvas-confetti';
-import { Loader2, NotebookText, Quote as QuoteIcon } from 'lucide-react';
+import { ArrowLeft, Loader2, NotebookText, Quote as QuoteIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { getRouteApi, useNavigate, useRouter } from '@tanstack/react-router';
 import { useAuth } from '@/hooks/use-auth';
@@ -504,16 +496,16 @@ export function BookDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen">
-        <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
-          <div className="container mx-auto px-4 py-3 max-w-4xl">
-            <div className="flex justify-between items-center">
-              <Button variant="ghost" size="sm" onClick={() => router.history.back()}>
-                ← {messages.common.buttons.back}
-              </Button>
-              <ThemeToggle />
-            </div>
-          </div>
-        </header>
+        <PageHeader
+          maxWidth="max-w-4xl"
+          left={
+            <Button variant="ghost" size="sm" onClick={() => router.history.back()}>
+              <ArrowLeft className="h-4 w-4" />
+              {messages.common.buttons.back}
+            </Button>
+          }
+          right={<ThemeToggle />}
+        />
         <main className="container mx-auto px-4 py-4 max-w-4xl">
           <BookDetailSkeleton />
         </main>
@@ -539,16 +531,16 @@ export function BookDetailPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
-        <div className="container mx-auto px-4 py-3 max-w-4xl">
-          <div className="flex justify-between items-center">
-            <Button variant="ghost" size="sm" onClick={() => router.history.back()}>
-              ← {messages.common.buttons.back}
-            </Button>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        maxWidth="max-w-4xl"
+        left={
+          <Button variant="ghost" size="sm" onClick={() => router.history.back()}>
+            <ArrowLeft className="h-4 w-4" />
+            {messages.common.buttons.back}
+          </Button>
+        }
+        right={<ThemeToggle />}
+      />
 
       <main className="container mx-auto px-4 py-6 max-w-4xl animate-in fade-in-0 duration-300 space-y-8">
         {/* ── Book header panel ── */}
@@ -1153,29 +1145,16 @@ export function BookDetailPage() {
       </Drawer.Root>
 
       {/* ── Completion alert ── */}
-      <AlertDialog open={showCompletionDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{messages.books.confirmations.bookCompletedTitle}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {messages.books.confirmations.bookCompleted}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => setShowCompletionDialog(false)}
-              disabled={upsertMutation.isPending}
-            >
-              {messages.common.buttons.cancel}
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleMarkCompleted} disabled={upsertMutation.isPending}>
-              {upsertMutation.isPending
-                ? messages.common.states.loading
-                : messages.books.buttons.markAsCompleted}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={showCompletionDialog}
+        onOpenChange={setShowCompletionDialog}
+        title={messages.books.confirmations.bookCompletedTitle}
+        description={messages.books.confirmations.bookCompleted}
+        confirmLabel={messages.books.buttons.markAsCompleted}
+        variant="default"
+        isPending={upsertMutation.isPending}
+        onConfirm={handleMarkCompleted}
+      />
 
       {/* ── Edit quote dialog ── */}
       <Dialog open={!!editingQuote} onOpenChange={open => !open && setEditingQuote(null)}>
@@ -1228,33 +1207,17 @@ export function BookDetailPage() {
       </Dialog>
 
       {/* ── Delete quote alert ── */}
-      <AlertDialog open={deleteQuoteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{messages.books.quotes.delete}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {messages.books.confirmations.deleteQuote}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => setDeleteQuoteDialogOpen(false)}
-              disabled={deleteQuoteMutation.isPending}
-            >
-              {messages.common.buttons.cancel}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteQuote}
-              disabled={deleteQuoteMutation.isPending}
-              className="bg-destructive text-white hover:bg-destructive/90"
-            >
-              {deleteQuoteMutation.isPending
-                ? messages.common.buttons.deleting
-                : messages.common.buttons.delete}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteQuoteDialogOpen}
+        onOpenChange={setDeleteQuoteDialogOpen}
+        title={messages.books.quotes.delete}
+        description={messages.books.confirmations.deleteQuote}
+        confirmLabel={messages.common.buttons.delete}
+        variant="destructive"
+        isPending={deleteQuoteMutation.isPending}
+        onConfirm={handleDeleteQuote}
+        onCancel={() => setQuoteToDelete(null)}
+      />
 
       {/* ── Edit reflection dialog ── */}
       <Dialog open={!!editingReview} onOpenChange={open => !open && setEditingReview(null)}>
@@ -1293,62 +1256,29 @@ export function BookDetailPage() {
       </Dialog>
 
       {/* ── Delete reflection alert ── */}
-      <AlertDialog open={deleteReviewDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{messages.books.reflections.delete}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {messages.books.confirmations.deleteReflection}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => setDeleteReviewDialogOpen(false)}
-              disabled={deleteReviewMutation.isPending}
-            >
-              {messages.common.buttons.cancel}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteReview}
-              disabled={deleteReviewMutation.isPending}
-              className="bg-destructive text-white hover:bg-destructive/90"
-            >
-              {deleteReviewMutation.isPending
-                ? messages.common.buttons.deleting
-                : messages.common.buttons.delete}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteReviewDialogOpen}
+        onOpenChange={setDeleteReviewDialogOpen}
+        title={messages.books.reflections.delete}
+        description={messages.books.confirmations.deleteReflection}
+        confirmLabel={messages.common.buttons.delete}
+        variant="destructive"
+        isPending={deleteReviewMutation.isPending}
+        onConfirm={handleDeleteReview}
+        onCancel={() => setReviewToDelete(null)}
+      />
 
       {/* ── Delete reading record alert ── */}
-      <AlertDialog open={deleteRecordDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{messages.books.confirmations.deleteTitle}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {messages.books.confirmations.deleteMessage}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => setDeleteRecordDialogOpen(false)}
-              disabled={deleteMutation.isPending}
-            >
-              {messages.common.buttons.cancel}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteRecord}
-              disabled={deleteMutation.isPending}
-              className="bg-destructive text-white hover:bg-destructive/90"
-            >
-              {deleteMutation.isPending
-                ? messages.common.buttons.deleting
-                : messages.common.buttons.delete}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteRecordDialogOpen}
+        onOpenChange={setDeleteRecordDialogOpen}
+        title={messages.books.confirmations.deleteTitle}
+        description={messages.books.confirmations.deleteMessage}
+        confirmLabel={messages.common.buttons.delete}
+        variant="destructive"
+        isPending={deleteMutation.isPending}
+        onConfirm={handleDeleteRecord}
+      />
     </div>
   );
 }

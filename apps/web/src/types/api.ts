@@ -8,7 +8,6 @@ import type {
   Book,
   FriendAction,
   ReadingLog,
-  ReadingStatus,
   TablesInsert,
   TablesUpdate,
   Visibility,

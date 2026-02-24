@@ -1,5 +1,6 @@
 import { BookCover } from '@/components/book-cover';
 import { BookSearchInput } from '@/components/book-search-input';
+import { PageHeader } from '@/components/page-header';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,36 +12,10 @@ import type { AladinBook, BookFormData } from '@/types';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { useNavigate, useRouter } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
 type MobileStep = 'search' | 'confirm' | 'form';
-
-function SelectedBookPreview({ book }: { book: AladinBook }) {
-  return (
-    <div className="flex gap-4 p-4 rounded-lg border bg-card">
-      <div className="shrink-0 w-20 h-28 rounded overflow-hidden bg-muted">
-        {book.cover ? (
-          <img src={book.cover} alt={book.title} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs text-center p-1">
-            {messages.books.details.noCover}
-          </div>
-        )}
-      </div>
-      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
-        <p className="font-semibold text-sm leading-tight line-clamp-2">{book.title}</p>
-        <p className="text-xs text-muted-foreground">{book.author}</p>
-        <p className="text-xs text-muted-foreground">{book.publisher}</p>
-        {book.totalPages && (
-          <p className="text-xs text-muted-foreground">
-            {book.totalPages} {messages.books.details.pagesUnit}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
 
 function BookForm({
   selectedBook,
@@ -173,7 +148,7 @@ function BookForm({
                 control={control}
                 rules={{
                   validate: value =>
-                    !value || parseInt(value) > 0 || '페이지 수는 1 이상이어야 합니다',
+            !value || parseInt(value) > 0 || messages.books.messages.invalidPageCount,
                 }}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
@@ -207,6 +182,7 @@ function BookForm({
 
 function MobileView() {
   const navigate = useNavigate();
+  const router = useRouter();
   const createBookMutation = useCreateBook();
   const [step, setStep] = useState<MobileStep>('search');
   const [selectedBook, setSelectedBook] = useState<AladinBook | null>(null);
@@ -263,33 +239,24 @@ function MobileView() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
-        <div className="container mx-auto px-4 py-3 max-w-2xl">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              {step !== 'search' && (
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="p-1 -ml-1 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={messages.common.buttons.back}
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </button>
-              )}
-              <h1 className="text-xl font-bold">{messages.books.pages.new}</h1>
-            </div>
-            <div className="flex gap-2 items-center">
-              <ThemeToggle />
-              <Link to="/">
-                <Button variant="outline" size="sm">
-                  {messages.common.buttons.cancel}
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        maxWidth="max-w-2xl"
+        left={
+          step !== 'search' ? (
+            <Button variant="ghost" size="sm" onClick={handleBack}>
+              <ArrowLeft className="h-4 w-4" />
+              {messages.common.buttons.back}
+            </Button>
+          ) : (
+            <Button variant="ghost" size="sm" onClick={() => router.history.back()}>
+              <ArrowLeft className="h-4 w-4" />
+              {messages.common.buttons.cancel}
+            </Button>
+          )
+        }
+        center={<h1 className="text-xl font-bold">{messages.books.pages.new}</h1>}
+        right={<ThemeToggle />}
+      />
 
       <main className="flex-1 container mx-auto px-4 py-6 max-w-2xl flex flex-col">
         {step === 'search' && (
@@ -328,7 +295,7 @@ function MobileView() {
                 <p className="text-sm text-muted-foreground">{resolvedBook.author}</p>
                 <p className="text-sm text-muted-foreground">{resolvedBook.publisher}</p>
                 {isLookingUp ? (
-                  <p className="text-sm text-muted-foreground animate-pulse">페이지 조회 중...</p>
+                  <p className="text-sm text-muted-foreground animate-pulse">{messages.books.messages.lookingUpPages}</p>
                 ) : resolvedBook.totalPages ? (
                   <p className="text-sm text-muted-foreground">
                     {resolvedBook.totalPages} {messages.books.details.pagesUnit}
@@ -373,6 +340,7 @@ function MobileView() {
 
 function DesktopView() {
   const navigate = useNavigate();
+  const router = useRouter();
   const createBookMutation = useCreateBook();
   const [selectedBook, setSelectedBook] = useState<AladinBook | null>(null);
 
@@ -392,21 +360,17 @@ function DesktopView() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
-        <div className="container mx-auto px-4 py-3 max-w-2xl">
-          <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold">{messages.books.pages.new}</h1>
-            <div className="flex gap-2 items-center">
-              <ThemeToggle />
-              <Link to="/">
-                <Button variant="outline" size="sm">
-                  {messages.common.buttons.cancel}
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        maxWidth="max-w-2xl"
+        left={
+          <Button variant="ghost" size="sm" onClick={() => router.history.back()}>
+            <ArrowLeft className="h-4 w-4" />
+            {messages.common.buttons.cancel}
+          </Button>
+        }
+        center={<h1 className="text-xl font-bold">{messages.books.pages.new}</h1>}
+        right={<ThemeToggle />}
+      />
 
       <main className="container mx-auto px-4 py-6 max-w-2xl">
         <BookForm

@@ -1,4 +1,5 @@
 import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
 import {
   FriendListItemSkeleton,
   ProfileSectionSkeleton,
@@ -7,16 +8,7 @@ import {
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import {
   Dialog,
   DialogContent,
@@ -58,19 +50,19 @@ export function MyPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
-        <div className="container mx-auto px-4 py-3 max-w-2xl">
-          <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold">{messages.profile.pages.myPage}</h1>
-            <div className="flex gap-2 items-center">
-              <ThemeToggle />
-              <Button variant="outline" size="sm" onClick={() => signOut()}>
-                {messages.common.buttons.signOut}
-              </Button>
-            </div>
+      <PageHeader
+        maxWidth="max-w-2xl"
+        left={<h1 className="text-xl font-bold">{messages.profile.pages.myPage}</h1>}
+        right={
+          <div className="flex gap-2 items-center">
+            <ThemeToggle />
+            <Button variant="outline" size="sm" onClick={() => signOut()}>
+              {messages.common.buttons.signOut}
+            </Button>
           </div>
-
-          <div className="flex gap-1 mt-3 p-1 bg-muted rounded-lg">
+        }
+        tabs={
+          <div className="flex gap-1 p-1 bg-muted rounded-lg">
             {[
               { key: 'profile' as Tab, label: messages.profile.pages.myPage },
               { key: 'friends' as Tab, label: messages.friends.pages.friends },
@@ -89,8 +81,8 @@ export function MyPage() {
               </button>
             ))}
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <main className="container mx-auto px-4 py-6 max-w-2xl">
         {activeTab === 'profile' && <ProfileSection />}
@@ -508,9 +500,7 @@ function FriendsSection() {
       toast.success(messages.friends.success.requestSent);
     } catch (error) {
       console.error('Failed to send request:', error);
-      if (error instanceof Error) {
-        toast.error(error.message);
-      }
+      toast.error(messages.friends.errors.requestFailed);
     }
   };
 
@@ -700,38 +690,29 @@ function FriendsSection() {
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!confirmDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {confirmDialog?.type === 'remove'
-                ? messages.friends.buttons.removeFriend
-                : messages.friends.buttons.block}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmDialog?.type === 'remove'
-                ? messages.friends.confirmations.removeFriend
+      <ConfirmDialog
+        open={!!confirmDialog}
+        onOpenChange={open => { if (!open) setConfirmDialog(null); }}
+        title={
+          confirmDialog?.type === 'remove'
+            ? messages.friends.buttons.removeFriend
+            : messages.friends.buttons.block
+        }
+        description={
+          confirmDialog?.type === 'remove'
+            ? messages.friends.confirmations.removeFriend
                 : messages.friends.confirmations.block}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setConfirmDialog(null)}>
-              {messages.common.buttons.cancel}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirm}
-              disabled={deleteFriendshipMutation.isPending || blockUserMutation.isPending}
-              className="bg-destructive text-white hover:bg-destructive/90"
-            >
-              {deleteFriendshipMutation.isPending || blockUserMutation.isPending
-                ? messages.common.states.loading
-                : confirmDialog?.type === 'remove'
-                  ? messages.friends.buttons.remove
-                  : messages.friends.buttons.block}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        cancelLabel={messages.common.buttons.cancel}
+        confirmLabel={
+          confirmDialog?.type === 'remove'
+            ? messages.friends.buttons.remove
+            : messages.friends.buttons.block
+        }
+        variant="destructive"
+        isPending={deleteFriendshipMutation.isPending || blockUserMutation.isPending}
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmDialog(null)}
+      />
     </>
   );
 }

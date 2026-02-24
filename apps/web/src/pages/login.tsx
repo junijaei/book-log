@@ -8,7 +8,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { FieldLabel } from '@/components/ui/field';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/use-auth';
 import { messages } from '@/constants/messages';
@@ -121,7 +121,7 @@ function MagicLinkForm({ onBack }: MagicLinkFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="magic-email">{messages.auth.login.emailLabel}</Label>
+          <FieldLabel htmlFor="magic-email">{messages.auth.login.emailLabel}</FieldLabel>
           <Input
             id="magic-email"
             type="email"
@@ -191,7 +191,7 @@ function PasswordForm() {
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="password-email">{messages.auth.login.emailLabel}</Label>
+        <FieldLabel htmlFor="password-email">{messages.auth.login.emailLabel}</FieldLabel>
         <Input
           id="password-email"
           type="email"
@@ -205,7 +205,7 @@ function PasswordForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">{messages.auth.login.passwordLabel}</Label>
+        <FieldLabel htmlFor="password">{messages.auth.login.passwordLabel}</FieldLabel>
         <Input
           id="password"
           type="password"

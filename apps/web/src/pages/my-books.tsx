@@ -1,4 +1,5 @@
 import { BookCardList } from '@/components/book-card-list';
+import { PageHeader } from '@/components/page-header';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,7 +49,7 @@ export function MyBooksPage() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useReadingRecords(
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } = useReadingRecords(
     filters,
     sort
   );
@@ -77,28 +78,28 @@ export function MyBooksPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
-        <div className="container mx-auto px-4 py-3 max-w-6xl">
-          <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold">{messages.common.navigation.myBooks}</h1>
-            <div className="flex gap-2 items-center">
-              <Button
-                variant={showFilters || hasActiveFilters ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                {showFilters ? '필터 닫기' : '검색/필터'}
-                {hasActiveFilters && !showFilters && ' •'}
-              </Button>
-              <ThemeToggle />
-              <Link to="/books/new">
-                <Button size="sm">{messages.books.buttons.addBook}</Button>
-              </Link>
-            </div>
+      <PageHeader
+        maxWidth="max-w-6xl"
+        left={<h1 className="text-xl font-bold">{messages.common.navigation.myBooks}</h1>}
+        right={
+          <div className="flex gap-2 items-center">
+            <Button
+              variant={showFilters || hasActiveFilters ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              {showFilters ? messages.books.buttons.hideFilters : messages.books.buttons.showFilters}
+              {hasActiveFilters && !showFilters && ' •'}
+            </Button>
+            <ThemeToggle />
+            <Link to="/books/new">
+              <Button size="sm">{messages.books.buttons.addBook}</Button>
+            </Link>
           </div>
-
-          {showFilters && (
-            <div className="mt-3 pb-1 space-y-3 animate-in slide-in-from-top-2 duration-200">
+        }
+        tabs={
+          showFilters ? (
+            <div className="pb-1 space-y-3 animate-in slide-in-from-top-2 duration-200">
               <Input
                 type="search"
                 placeholder={messages.books.placeholders.search}
@@ -133,27 +134,33 @@ export function MyBooksPage() {
                 </Select>
               </div>
             </div>
-          )}
-        </div>
-      </header>
+          ) : undefined
+        }
+      />
 
       <main className="container mx-auto px-4 py-4 max-w-6xl">
-        <BookCardList
-          records={records}
-          isLoading={isLoading}
-          isFetchingNextPage={isFetchingNextPage}
-          observerTarget={observerTarget}
-          emptyState={
-            <div className="text-center py-12 text-muted-foreground">
-              <p className="text-sm">{messages.books.messages.empty}</p>
-              <Link to="/books/new">
-                <Button variant="outline" size="sm" className="mt-4">
-                  {messages.books.buttons.addFirstBook}
-                </Button>
-              </Link>
-            </div>
-          }
-        />
+        {isError ? (
+          <div className="py-12 flex flex-col items-center gap-3 text-muted-foreground">
+            <p className="text-sm">{messages.common.errors.failedToLoad}</p>
+          </div>
+        ) : (
+          <BookCardList
+            records={records}
+            isLoading={isLoading}
+            isFetchingNextPage={isFetchingNextPage}
+            observerTarget={observerTarget}
+            emptyState={
+              <div className="text-center py-12 text-muted-foreground">
+                <p className="text-sm">{messages.books.messages.empty}</p>
+                <Link to="/books/new">
+                  <Button variant="outline" size="sm" className="mt-4">
+                    {messages.books.buttons.addFirstBook}
+                  </Button>
+                </Link>
+              </div>
+            }
+          />
+        )}
       </main>
     </div>
   );

@@ -7,7 +7,7 @@ interface EmptyStateProps {
   message: string;
   action?: {
     label: string;
-    to?: '/' | '/feed' | '/mypage' | '/books/new';
+    to?: string;
     onClick?: () => void;
   };
 }

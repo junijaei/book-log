@@ -12,6 +12,7 @@
  * 비밀번호 설정 팝업을 보여줍니다.
  */
 
+import { Spinner } from '@/components/ui/spinner';
 import { verifyOtpToken } from '@/api/auth';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,10 +24,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { FieldLabel } from '@/components/ui/field';
 import { useAuth } from '@/hooks/use-auth';
 import { messages } from '@/constants/messages';
-import { BookOpen, Loader2 } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { getRouteApi, useNavigate } from '@tanstack/react-router';
 
@@ -141,7 +142,7 @@ function SetPasswordDialog({ open, onSkip, onSaved }: SetPasswordDialogProps) {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="new-password">{messages.auth.passwordSetup.newPasswordLabel}</Label>
+              <FieldLabel htmlFor="new-password">{messages.auth.passwordSetup.newPasswordLabel}</FieldLabel>
               <Input
                 id="new-password"
                 type="password"
@@ -154,9 +155,9 @@ function SetPasswordDialog({ open, onSkip, onSaved }: SetPasswordDialogProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirm-password">
+              <FieldLabel htmlFor="confirm-password">
                 {messages.auth.passwordSetup.confirmPasswordLabel}
-              </Label>
+              </FieldLabel>
               <Input
                 id="confirm-password"
                 type="password"
@@ -283,7 +284,7 @@ export function AuthCallbackPage() {
   return (
     <>
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Spinner size="lg" />
         <p className="text-sm text-muted-foreground">{messages.auth.callback.loading}</p>
       </div>
 
