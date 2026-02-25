@@ -94,11 +94,11 @@ import { BookCover } from "./book-cover";
 // 2. Interface for props (prefer interface over type for props)
 interface BookCardProps {
   record: ReadingRecord;
-  showAuthor?: boolean;
+  isFeed?: boolean;
 }
 
 // 3. Export component as named function (not default, not arrow)
-export function BookCard({ record, showAuthor }: BookCardProps) {
+export function BookCard({ record, isFeed }: BookCardProps) {
   // Component logic
 }
 ```
