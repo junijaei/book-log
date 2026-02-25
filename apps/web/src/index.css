@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 
 @plugin 'tailwindcss-animate';
+@custom-variant dark (&:is(.dark *));
 
 @theme {
   /* Color tokens - using neutral (warm grayscale, no blue tint) */
@@ -67,10 +68,6 @@
   --color-border: #262626;
   --color-input: #262626;
   --color-ring: #d4d4d4;
-}
-
-* {
-  border-color: var(--color-border);
 }
 
 html {

@@ -2,8 +2,8 @@ import { BookCardList } from '@/components/book-card-list';
 import { EmptyState } from '@/components/empty-state';
 import { PageHeader } from '@/components/page-header';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { useInfiniteScroll, useReadingRecords } from '@/hooks';
 import { messages } from '@/constants/messages';
+import { useInfiniteScroll, useReadingRecords } from '@/hooks';
 import { cn } from '@/lib/utils';
 import type { FeedScope, ReadingRecordFilters, ReadingRecordSort } from '@/types';
 import { Rss } from 'lucide-react';
@@ -24,10 +24,8 @@ export function FeedPage() {
 
   const feedFilters = useMemo(() => ({ ...filters, scope }), [filters, scope]);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } = useReadingRecords(
-    feedFilters,
-    sort
-  );
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } =
+    useReadingRecords(feedFilters, sort);
 
   const records = useMemo(() => data?.pages.flatMap(page => page.data) ?? [], [data]);
 
@@ -74,7 +72,7 @@ export function FeedPage() {
             isLoading={isLoading}
             isFetchingNextPage={isFetchingNextPage}
             observerTarget={observerTarget}
-            showAuthor
+            isFeed
             emptyState={
               <EmptyState
                 icon={<Rss size={48} strokeWidth={1} />}

@@ -8,7 +8,7 @@ interface BookCardListProps {
   isLoading: boolean;
   isFetchingNextPage: boolean;
   emptyState: ReactNode;
-  showAuthor?: boolean;
+  isFeed?: boolean;
   observerTarget: RefObject<HTMLDivElement | null>;
 }
 
@@ -17,7 +17,7 @@ export function BookCardList({
   isLoading,
   isFetchingNextPage,
   emptyState,
-  showAuthor,
+  isFeed,
   observerTarget,
 }: BookCardListProps) {
   if (isLoading) {
@@ -32,7 +32,7 @@ export function BookCardList({
     <>
       <div className="flex flex-col gap-2 animate-in fade-in-0 duration-300">
         {records.map(record => (
-          <BookCard key={record.reading_log.id} record={record} showAuthor={showAuthor} />
+          <BookCard key={record.reading_log.id} record={record} isFeed={isFeed} />
         ))}
       </div>
 

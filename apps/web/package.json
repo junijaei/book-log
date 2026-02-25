@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "dev": "--filter web dev",
+    "build": "--filter web",
+    "lint": "--filter web eslint .",
+    "preview": "--filter web vite preview"
   },
   "dependencies": {
     "@book-log/database": "workspace:*",
