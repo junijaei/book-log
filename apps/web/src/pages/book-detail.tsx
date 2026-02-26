@@ -19,7 +19,6 @@ import { PageHeader } from '@/components/page-header';
 import { QuotesSection } from '@/components/quotes-section';
 import { ReflectionsSection } from '@/components/reflections-section';
 import { BookDetailSkeleton } from '@/components/skeletons';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { messages } from '@/constants/messages';
 import { useDeleteReadingRecord, useUpsertReadingRecord } from '@/hooks';
@@ -31,7 +30,6 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 const Route = getRouteApi('/_authenticated/books/$id');
-
 
 // ─── Upsert payload helper ────────────────────────────────────────────────────
 
@@ -179,12 +177,16 @@ export function BookDetailPage() {
         <PageHeader
           maxWidth="max-w-4xl"
           left={
-            <Button variant="ghost" size="sm" onClick={() => router.history.back()}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="px-0"
+              onClick={() => router.history.back()}
+            >
               <ArrowLeft className="h-4 w-4" />
               {messages.common.buttons.back}
             </Button>
           }
-          right={<ThemeToggle />}
         />
         <main className="container mx-auto px-4 py-4 max-w-4xl">
           <BookDetailSkeleton />
@@ -213,12 +215,11 @@ export function BookDetailPage() {
       <PageHeader
         maxWidth="max-w-4xl"
         left={
-          <Button variant="ghost" size="sm" onClick={() => router.history.back()}>
+          <Button variant="ghost" size="sm" className="px-0" onClick={() => router.history.back()}>
             <ArrowLeft className="h-4 w-4" />
             {messages.common.buttons.back}
           </Button>
         }
-        right={<ThemeToggle />}
       />
 
       <main className="container mx-auto px-4 py-6 max-w-4xl animate-in fade-in-0 duration-300 space-y-8">

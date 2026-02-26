@@ -93,34 +93,23 @@ function MyBookHeaderDesktop({
       <hr />
 
       <div className="flex flex-col items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-        {/* Rating */}
+        {/* Visibility */}
         <div className="flex w-full px-3 gap-2 items-center">
-          <p className="basis-1/4">별점</p>
+          <p className="basis-1/4">{messages.books.fields.visibility}</p>
           <span className="flex items-center gap-1">
-            <Select
-              value={reading_log.rating?.toString() ?? ''}
-              onValueChange={v => onSaveRating(v === 'clear' ? null : parseInt(v))}
-            >
-              <SelectTrigger className="w-auto h-auto border-0 bg-transparent shadow-none p-0 [&>svg]:hidden focus:ring-0 focus:ring-offset-0">
+            <Select value={visibility} onValueChange={v => onSaveVisibility(v as Visibility)}>
+              <SelectTrigger className="w-auto h-auto py-0.5 px-2 text-xs border-0 bg-transparent p-0 [&>svg]:hidden focus:ring-0 focus:ring-offset-0 shadow-none">
                 <SelectValue>
-                  {reading_log.rating ? (
-                    <span className="text-amber-500">{renderRatingStars(reading_log.rating)}</span>
-                  ) : (
-                    <span className="text-muted-foreground/70 text-sm shrink-0 mb-0.5">☆☆☆☆☆</span>
-                  )}
-                  <RowIndicator isSaving={savingField === 'rating'} />
+                  <Badge>{getVisibilityLabel(visibility)}</Badge>
+                  <RowIndicator isSaving={savingField === 'visibility'} />
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {([5, 4, 3, 2, 1] as const).map(star => (
-                  <SelectItem key={star} value={star.toString()}>
-                    <span className="text-amber-500">{renderRatingStars(star)}</span>
-                    <span className="text-sm text-muted-foreground ml-2">{star}점</span>
+                {VISIBILITIES.map(v => (
+                  <SelectItem key={v} value={v}>
+                    {getVisibilityLabel(v)}
                   </SelectItem>
                 ))}
-                {reading_log.rating && (
-                  <SelectItem value="clear">{messages.books.buttons.clearRating}</SelectItem>
-                )}
               </SelectContent>
             </Select>
           </span>
@@ -151,23 +140,34 @@ function MyBookHeaderDesktop({
           </span>
         </div>
 
-        {/* Visibility */}
+        {/* Rating */}
         <div className="flex w-full px-3 gap-2 items-center">
-          <p className="basis-1/4">{messages.books.fields.visibility}</p>
+          <p className="basis-1/4">별점</p>
           <span className="flex items-center gap-1">
-            <Select value={visibility} onValueChange={v => onSaveVisibility(v as Visibility)}>
-              <SelectTrigger className="w-auto h-auto py-0.5 px-2 text-xs border-0 bg-transparent p-0 [&>svg]:hidden focus:ring-0 focus:ring-offset-0 shadow-none">
+            <Select
+              value={reading_log.rating?.toString() ?? ''}
+              onValueChange={v => onSaveRating(v === 'clear' ? null : parseInt(v))}
+            >
+              <SelectTrigger className="w-auto h-auto border-0 bg-transparent shadow-none p-0 [&>svg]:hidden focus:ring-0 focus:ring-offset-0">
                 <SelectValue>
-                  <Badge>{getVisibilityLabel(visibility)}</Badge>
-                  <RowIndicator isSaving={savingField === 'visibility'} />
+                  {reading_log.rating ? (
+                    <span className="text-amber-500">{renderRatingStars(reading_log.rating)}</span>
+                  ) : (
+                    <span className="text-muted-foreground/70 text-sm shrink-0 mb-0.5">☆☆☆☆☆</span>
+                  )}
+                  <RowIndicator isSaving={savingField === 'rating'} />
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {VISIBILITIES.map(v => (
-                  <SelectItem key={v} value={v}>
-                    {getVisibilityLabel(v)}
+                {([5, 4, 3, 2, 1] as const).map(star => (
+                  <SelectItem key={star} value={star.toString()}>
+                    <span className="text-amber-500">{renderRatingStars(star)}</span>
+                    <span className="text-sm text-muted-foreground ml-2">{star}점</span>
                   </SelectItem>
                 ))}
+                {reading_log.rating && (
+                  <SelectItem value="clear">{messages.books.buttons.clearRating}</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </span>
@@ -231,6 +231,32 @@ function MyBookHeaderMobile({
       <hr />
 
       <div className="flex flex-col items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+        {/* Visibility */}
+        <div className="flex w-full px-3 gap-2 items-center">
+          <span className="basis-1/4">{messages.books.fields.visibility}</span>
+          <button
+            type="button"
+            onClick={() => setOpenDrawer('visibility')}
+            aria-label={messages.books.fields.visibility}
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded inline-flex items-center gap-2"
+          >
+            <VisibilityBadge visibility={visibility}></VisibilityBadge>
+            <RowIndicator isSaving={savingField === 'visibility'} />
+          </button>
+        </div>
+        {/* Status */}
+        <div className="flex w-full px-3 gap-2 items-center">
+          <span className="basis-1/4">{messages.books.fields.status}</span>
+          <button
+            type="button"
+            onClick={() => setOpenDrawer('status')}
+            aria-label={messages.books.fields.status}
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded inline-flex items-center gap-2"
+          >
+            <StatusBadge status={reading_log.status} />
+            <RowIndicator isSaving={savingField === 'status'} />
+          </button>
+        </div>
         {/* Rating */}
         <div className="flex w-full px-3 gap-2 items-center">
           <span className="basis-1/4">{messages.books.fields.rating}</span>
@@ -248,35 +274,6 @@ function MyBookHeaderMobile({
           </button>
           <RowIndicator isSaving={savingField === 'rating'} />
         </div>
-
-        {/* Status */}
-        <div className="flex w-full px-3 gap-2 items-center">
-          <span className="basis-1/4">{messages.books.fields.status}</span>
-          <button
-            type="button"
-            onClick={() => setOpenDrawer('status')}
-            aria-label={messages.books.fields.status}
-            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded inline-flex items-center gap-2"
-          >
-            <StatusBadge status={reading_log.status} />
-            <RowIndicator isSaving={savingField === 'status'} />
-          </button>
-        </div>
-
-        {/* Visibility */}
-        <div className="flex w-full px-3 gap-2 items-center">
-          <span className="basis-1/4">{messages.books.fields.visibility}</span>
-          <button
-            type="button"
-            onClick={() => setOpenDrawer('visibility')}
-            aria-label={messages.books.fields.visibility}
-            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded inline-flex items-center gap-2"
-          >
-            <VisibilityBadge visibility={visibility}></VisibilityBadge>
-            <RowIndicator isSaving={savingField === 'visibility'} />
-          </button>
-        </div>
-
         {/* Date range */}
         <div className="flex w-full px-3 gap-2 items-center">
           <span className="basis-1/4">{messages.books.fields.readingPeriod}</span>

@@ -1,3 +1,4 @@
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { EmptyState } from '@/components/empty-state';
 import { PageHeader } from '@/components/page-header';
 import {
@@ -8,7 +9,6 @@ import {
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ConfirmDialog } from '@/components/confirm-dialog';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { messages } from '@/constants/messages';
 import {
   useAcceptFriendRequest,
   useBlockUser,
@@ -35,9 +36,8 @@ import {
   useUpdateProfile,
 } from '@/hooks';
 import { useAuth } from '@/hooks/use-auth';
-import { messages } from '@/constants/messages';
 import type { PublicProfile, UpdateProfilePayload } from '@/types';
-import { Inbox, Send, Users } from 'lucide-react';
+import { ChevronRight, Inbox, Send, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -45,22 +45,13 @@ import { toast } from 'sonner';
 type Tab = 'profile' | 'friends' | 'requests';
 
 export function MyPage() {
-  const { signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
 
   return (
-    <div className="min-h-screen">
+    <>
       <PageHeader
         maxWidth="max-w-2xl"
         left={<h1 className="text-xl font-bold">{messages.profile.pages.myPage}</h1>}
-        right={
-          <div className="flex gap-2 items-center">
-            <ThemeToggle />
-            <Button variant="outline" size="sm" onClick={() => signOut()}>
-              {messages.common.buttons.signOut}
-            </Button>
-          </div>
-        }
         tabs={
           <div className="flex gap-1 p-1 bg-muted rounded-lg">
             {[
@@ -89,7 +80,7 @@ export function MyPage() {
         {activeTab === 'friends' && <FriendsSection />}
         {activeTab === 'requests' && <RequestsSection />}
       </main>
-    </div>
+    </>
   );
 }
 
@@ -215,6 +206,7 @@ function PasswordDialog({ open, onClose, mode }: PasswordDialogProps) {
 // =============================================================================
 
 function ProfileSection() {
+  const { signOut } = useAuth();
   const { data: profile, isLoading } = useProfile();
   const updateProfileMutation = useUpdateProfile();
   const [isEditing, setIsEditing] = useState(false);
@@ -266,165 +258,198 @@ function ProfileSection() {
   if (!profile) return null;
 
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-base">{messages.profile.sections.myInfo}</CardTitle>
-          {!isEditing && (
-            <Button variant="outline" size="sm" onClick={startEditing}>
-              {messages.profile.buttons.editProfile}
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
-        {isEditing ? (
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <FieldGroup className="gap-4">
-              <Controller
-                name="nickname"
-                control={control}
-                rules={{
-                  required: true,
-                  minLength: { value: 2, message: messages.profile.errors.nicknameLengthError },
-                  maxLength: { value: 20, message: messages.profile.errors.nicknameLengthError },
-                }}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="nickname">
-                      {messages.profile.fields.nickname} <span className="text-destructive">*</span>
-                    </FieldLabel>
-                    <Input
-                      {...field}
-                      id="nickname"
-                      value={field.value ?? ''}
-                      placeholder={messages.profile.placeholders.nickname}
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                  </Field>
-                )}
-              />
-
-              <Controller
-                name="avatar_url"
-                control={control}
-                render={({ field }) => (
-                  <Field>
-                    <FieldLabel htmlFor="avatar_url">
-                      {messages.profile.fields.avatarUrl}
-                    </FieldLabel>
-                    <Input
-                      {...field}
-                      id="avatar_url"
-                      type="url"
-                      value={field.value ?? ''}
-                      placeholder={messages.profile.placeholders.avatarUrl}
-                    />
-                    {field.value && (
-                      <img
-                        src={field.value}
-                        alt=""
-                        className="mt-2 w-12 h-12 rounded-full object-cover border"
-                        onError={e => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    )}
-                  </Field>
-                )}
-              />
-
-              <Controller
-                name="bio"
-                control={control}
-                render={({ field }) => (
-                  <Field>
-                    <FieldLabel htmlFor="bio">{messages.profile.fields.bio}</FieldLabel>
-                    <Textarea
-                      {...field}
-                      id="bio"
-                      rows={3}
-                      value={field.value ?? ''}
-                      placeholder={messages.profile.placeholders.bio}
-                    />
-                  </Field>
-                )}
-              />
-
-              <div className="flex gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditing(false)}
-                  disabled={updateProfileMutation.isPending}
-                >
-                  {messages.common.buttons.cancel}
+    <>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-base">{messages.profile.sections.myInfo}</CardTitle>
+              {!isEditing && (
+                <Button variant="outline" size="sm" onClick={startEditing}>
+                  {messages.profile.buttons.editProfile}
                 </Button>
-                <Button type="submit" size="sm" disabled={updateProfileMutation.isPending}>
-                  {updateProfileMutation.isPending
-                    ? messages.common.buttons.saving
-                    : messages.common.buttons.save}
-                </Button>
-              </div>
-            </FieldGroup>
-          </form>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              {profile.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt={profile.nickname}
-                  className="w-16 h-16 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-xl font-bold">
-                  {profile.nickname.charAt(0).toUpperCase()}
-                </div>
               )}
-              <div>
-                <h2 className="font-semibold text-lg">{profile.nickname}</h2>
-                {profile.bio && <p className="text-sm text-muted-foreground mt-1">{profile.bio}</p>}
-              </div>
             </div>
+          </CardHeader>
+          <CardContent>
+            {isEditing ? (
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <FieldGroup className="gap-4">
+                  <Controller
+                    name="nickname"
+                    control={control}
+                    rules={{
+                      required: true,
+                      minLength: { value: 2, message: messages.profile.errors.nicknameLengthError },
+                      maxLength: {
+                        value: 20,
+                        message: messages.profile.errors.nicknameLengthError,
+                      },
+                    }}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="nickname">
+                          {messages.profile.fields.nickname}{' '}
+                          <span className="text-destructive">*</span>
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id="nickname"
+                          value={field.value ?? ''}
+                          placeholder={messages.profile.placeholders.nickname}
+                          aria-invalid={fieldState.invalid}
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
 
-            {/* 비밀번호 관리 */}
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">
-                  {messages.auth.passwordSetup.newPasswordLabel}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {hasPassword
-                    ? messages.auth.passwordSetup.passwordStatus.hasPassword
-                    : messages.auth.passwordSetup.passwordStatus.noPassword}
-                </p>
+                  <Controller
+                    name="avatar_url"
+                    control={control}
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel htmlFor="avatar_url">
+                          {messages.profile.fields.avatarUrl}
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id="avatar_url"
+                          type="url"
+                          value={field.value ?? ''}
+                          placeholder={messages.profile.placeholders.avatarUrl}
+                        />
+                        {field.value && (
+                          <img
+                            src={field.value}
+                            alt=""
+                            className="mt-2 w-12 h-12 rounded-full object-cover border"
+                            onError={e => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        )}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="bio"
+                    control={control}
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel htmlFor="bio">{messages.profile.fields.bio}</FieldLabel>
+                        <Textarea
+                          {...field}
+                          id="bio"
+                          rows={3}
+                          value={field.value ?? ''}
+                          placeholder={messages.profile.placeholders.bio}
+                        />
+                      </Field>
+                    )}
+                  />
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditing(false)}
+                      disabled={updateProfileMutation.isPending}
+                    >
+                      {messages.common.buttons.cancel}
+                    </Button>
+                    <Button type="submit" size="sm" disabled={updateProfileMutation.isPending}>
+                      {updateProfileMutation.isPending
+                        ? messages.common.buttons.saving
+                        : messages.common.buttons.save}
+                    </Button>
+                  </div>
+                </FieldGroup>
+              </form>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  {profile.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.nickname}
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-xl font-bold">
+                      {profile.nickname.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <h2 className="font-semibold text-lg">{profile.nickname}</h2>
+                    {profile.bio && (
+                      <p className="text-sm text-muted-foreground mt-1">{profile.bio}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 비밀번호 관리 */}
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">{messages.profile.config.password}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {hasPassword
+                        ? messages.auth.passwordSetup.passwordStatus.hasPassword
+                        : messages.auth.passwordSetup.passwordStatus.noPassword}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setPasswordDialog({ open: true, mode: hasPassword ? 'change' : 'add' })
+                    }
+                  >
+                    {hasPassword
+                      ? messages.auth.passwordSetup.changeButton
+                      : messages.auth.passwordSetup.addButton}
+                  </Button>
+                </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setPasswordDialog({ open: true, mode: hasPassword ? 'change' : 'add' })
-                }
-              >
-                {hasPassword
-                  ? messages.auth.passwordSetup.changeButton
-                  : messages.auth.passwordSetup.addButton}
-              </Button>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{messages.profile.sections.config}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">{messages.profile.config.theme}</p>
+                </div>
+                <ThemeToggle />
+              </div>
             </div>
-          </div>
-        )}
-      </CardContent>
+          </CardContent>
+        </Card>
+        <div className="flex items-center justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => signOut()}
+            className="text-muted-foreground"
+          >
+            {messages.profile.config.signOut} <ChevronRight />
+          </Button>
+        </div>
+      </div>
 
       <PasswordDialog
         open={passwordDialog.open}
         mode={passwordDialog.mode}
         onClose={() => setPasswordDialog(prev => ({ ...prev, open: false }))}
       />
-    </Card>
+    </>
   );
 }
 
@@ -692,7 +717,9 @@ function FriendsSection() {
 
       <ConfirmDialog
         open={!!confirmDialog}
-        onOpenChange={open => { if (!open) setConfirmDialog(null); }}
+        onOpenChange={open => {
+          if (!open) setConfirmDialog(null);
+        }}
         title={
           confirmDialog?.type === 'remove'
             ? messages.friends.buttons.removeFriend
@@ -701,7 +728,8 @@ function FriendsSection() {
         description={
           confirmDialog?.type === 'remove'
             ? messages.friends.confirmations.removeFriend
-                : messages.friends.confirmations.block}
+            : messages.friends.confirmations.block
+        }
         cancelLabel={messages.common.buttons.cancel}
         confirmLabel={
           confirmDialog?.type === 'remove'

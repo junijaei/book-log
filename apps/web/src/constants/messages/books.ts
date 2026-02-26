@@ -79,7 +79,7 @@ export const booksMessages = {
   // Buttons
   buttons: {
     addBook: '도서 추가',
-    addFirstBook: '첫 도서 추가하기',
+    addFirstBook: '도서 추가하기',
     addQuote: '인용구 추가',
     addReflection: '감상 추가',
     backToList: '목록으로',
@@ -129,7 +129,7 @@ export const booksMessages = {
   // Messages
   messages: {
     lookingUpPages: '페이지 조회 중...',
-    empty: '도서를 찾을 수 없습니다.',
+    empty: '등록된 도서가 없습니다.',
     notFound: '도서를 찾을 수 없습니다',
     noFeedBooks: '피드에 표시할 도서가 없습니다.',
     noEditPermission: '본인의 독서 기록만 편집할 수 있습니다.',

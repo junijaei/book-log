@@ -1,7 +1,6 @@
 import { BookCardList } from '@/components/book-card-list';
 import { EmptyState } from '@/components/empty-state';
 import { PageHeader } from '@/components/page-header';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { messages } from '@/constants/messages';
 import { useInfiniteScroll, useReadingRecords } from '@/hooks';
 import { cn } from '@/lib/utils';
@@ -40,7 +39,6 @@ export function FeedPage() {
       <PageHeader
         maxWidth="max-w-6xl"
         left={<h1 className="text-xl font-bold">{messages.books.pages.feed}</h1>}
-        right={<ThemeToggle />}
         tabs={
           <div className="flex gap-1 p-1 bg-muted rounded-lg">
             {SCOPE_OPTIONS.map(opt => (

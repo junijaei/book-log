@@ -30,7 +30,6 @@ export const commonMessages = {
     add: '추가',
     next: '다음',
     loadMore: '더 보기',
-    signOut: '로그아웃',
   },
 
   // Common states

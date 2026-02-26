@@ -2,7 +2,6 @@ import { BookCover } from '@/components/book-cover';
 import { BookSearchInput } from '@/components/book-search-input';
 import { FieldDrawer } from '@/components/field-drawer';
 import { PageHeader } from '@/components/page-header';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,12 +10,11 @@ import { Input } from '@/components/ui/input';
 import { messages } from '@/constants/messages';
 import { useBookLookup, useCreateBook, useIsMobile } from '@/hooks';
 import { getVisibilityLabel } from '@/lib/constants';
-import type { AladinBook, BookFormData } from '@/types';
-import type { Visibility } from '@/types';
+import type { AladinBook, BookFormData, Visibility } from '@/types';
+import { useNavigate, useRouter } from '@tanstack/react-router';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { useNavigate, useRouter } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
 type MobileStep = 'search' | 'confirm' | 'form';
@@ -154,7 +152,7 @@ function BookForm({
                 control={control}
                 rules={{
                   validate: value =>
-            !value || parseInt(value) > 0 || messages.books.messages.invalidPageCount,
+                    !value || parseInt(value) > 0 || messages.books.messages.invalidPageCount,
                 }}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
@@ -252,19 +250,22 @@ function MobileView() {
         maxWidth="max-w-2xl"
         left={
           step !== 'search' ? (
-            <Button variant="ghost" size="sm" onClick={handleBack}>
+            <Button variant="ghost" className="px-0" size="sm" onClick={handleBack}>
               <ArrowLeft className="h-4 w-4" />
               {messages.common.buttons.back}
             </Button>
           ) : (
-            <Button variant="ghost" size="sm" onClick={() => router.history.back()}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="px-0"
+              onClick={() => router.history.back()}
+            >
               <ArrowLeft className="h-4 w-4" />
               {messages.common.buttons.cancel}
             </Button>
           )
         }
-        center={<h1 className="text-xl font-bold">{messages.books.pages.new}</h1>}
-        right={<ThemeToggle />}
       />
 
       <main className="flex-1 container mx-auto px-4 py-6 max-w-2xl flex flex-col">
@@ -304,7 +305,9 @@ function MobileView() {
                 <p className="text-sm text-muted-foreground">{resolvedBook.author}</p>
                 <p className="text-sm text-muted-foreground">{resolvedBook.publisher}</p>
                 {isLookingUp ? (
-                  <p className="text-sm text-muted-foreground animate-pulse">{messages.books.messages.lookingUpPages}</p>
+                  <p className="text-sm text-muted-foreground animate-pulse">
+                    {messages.books.messages.lookingUpPages}
+                  </p>
                 ) : resolvedBook.totalPages ? (
                   <p className="text-sm text-muted-foreground">
                     {resolvedBook.totalPages} {messages.books.details.pagesUnit}
@@ -410,13 +413,11 @@ function DesktopView() {
       <PageHeader
         maxWidth="max-w-2xl"
         left={
-          <Button variant="ghost" size="sm" onClick={() => router.history.back()}>
+          <Button variant="ghost" size="sm" className="px-0" onClick={() => router.history.back()}>
             <ArrowLeft className="h-4 w-4" />
             {messages.common.buttons.cancel}
           </Button>
         }
-        center={<h1 className="text-xl font-bold">{messages.books.pages.new}</h1>}
-        right={<ThemeToggle />}
       />
 
       <main className="container mx-auto px-4 py-6 max-w-2xl">

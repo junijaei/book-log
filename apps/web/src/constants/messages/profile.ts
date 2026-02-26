@@ -17,6 +17,13 @@ export const profileMessages = {
   // Section titles
   sections: {
     myInfo: '내 정보',
+    config: '설정',
+  },
+
+  config: {
+    theme: '테마 변경',
+    password: '비밀번호',
+    signOut: '로그아웃',
   },
 
   // Field labels

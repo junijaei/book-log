@@ -1,6 +1,5 @@
 import { BookCardList } from '@/components/book-card-list';
 import { PageHeader } from '@/components/page-header';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -10,12 +9,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useInfiniteScroll, useReadingRecords } from '@/hooks';
 import { messages } from '@/constants/messages';
+import { useInfiniteScroll, useReadingRecords } from '@/hooks';
 import { getReadingStatusLabel } from '@/lib/constants';
 import type { ReadingRecordFilters, ReadingRecordSort, ReadingStatus } from '@/types';
-import { useEffect, useMemo, useState } from 'react';
 import { Link } from '@tanstack/react-router';
+import { Search } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 type SortField = 'updated_at' | 'start_date' | 'end_date';
 
@@ -49,10 +49,8 @@ export function MyBooksPage() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } = useReadingRecords(
-    filters,
-    sort
-  );
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } =
+    useReadingRecords(filters, sort);
 
   const records = useMemo(() => data?.pages.flatMap(page => page.data) ?? [], [data]);
 
@@ -82,16 +80,16 @@ export function MyBooksPage() {
         maxWidth="max-w-6xl"
         left={<h1 className="text-xl font-bold">{messages.common.navigation.myBooks}</h1>}
         right={
-          <div className="flex gap-2 items-center">
-            <Button
-              variant={showFilters || hasActiveFilters ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              {showFilters ? messages.books.buttons.hideFilters : messages.books.buttons.showFilters}
-              {hasActiveFilters && !showFilters && ' •'}
-            </Button>
-            <ThemeToggle />
+          <div className="flex gap-4 items-center">
+            <div className="relative">
+              <Search
+                className="text-muted-foreground"
+                onClick={() => setShowFilters(!showFilters)}
+              />
+              {hasActiveFilters && !showFilters && (
+                <span className="absolute size-1 rounded bg-yellow-500 top-0 -right-1" />
+              )}
+            </div>
             <Link to="/books/new">
               <Button size="sm">{messages.books.buttons.addBook}</Button>
             </Link>

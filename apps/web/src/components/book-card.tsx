@@ -1,11 +1,9 @@
 import { messages } from '@/constants/messages';
-import { formatDateRange } from '@/lib/constants';
+import { formatDateRange, renderRatingStars } from '@/lib/constants';
 import type { ReadingRecord } from '@/types';
 import { Link } from '@tanstack/react-router';
 import { MessageSquareQuote, MessageSquareText, User } from 'lucide-react';
-import { useState } from 'react';
 import { BookCover } from './book-cover';
-import { QuickRecordResponsive } from './quick-record-responsive';
 import { StatusBadge } from './status-badge';
 
 interface BookCardProps {
@@ -15,7 +13,6 @@ interface BookCardProps {
 
 export function BookCard({ record, isFeed }: BookCardProps) {
   const { book, reading_log, quotes, reviews, profile } = record;
-  const [quickRecordOpen, setQuickRecordOpen] = useState(false);
 
   const dateRange = formatDateRange(reading_log.start_date, reading_log.end_date);
   const quoteCount = quotes.length;
@@ -80,8 +77,7 @@ export function BookCard({ record, isFeed }: BookCardProps) {
                   </span>
                   {reading_log.rating !== null && reading_log.rating > 0 ? (
                     <span className="text-amber-400 text-sm shrink-0 mb-0.5 ">
-                      {'★'.repeat(reading_log.rating)}
-                      {'☆'.repeat(5 - reading_log.rating)}
+                      {renderRatingStars(reading_log.rating)}
                     </span>
                   ) : (
                     <span className="text-muted-foreground/70 text-sm shrink-0 mb-0.5">☆☆☆☆☆</span>
@@ -92,12 +88,6 @@ export function BookCard({ record, isFeed }: BookCardProps) {
           </div>
         </div>
       </Link>
-
-      <QuickRecordResponsive
-        record={record}
-        open={quickRecordOpen}
-        onOpenChange={setQuickRecordOpen}
-      />
     </div>
   );
 }
