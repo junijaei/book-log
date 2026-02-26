@@ -1,14 +1,18 @@
 import { BookCover } from '@/components/book-cover';
 import { BookSearchInput } from '@/components/book-search-input';
+import { FieldDrawer } from '@/components/field-drawer';
 import { PageHeader } from '@/components/page-header';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { messages } from '@/constants/messages';
 import { useBookLookup, useCreateBook, useIsMobile } from '@/hooks';
+import { getVisibilityLabel } from '@/lib/constants';
 import type { AladinBook, BookFormData } from '@/types';
+import type { Visibility } from '@/types';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -16,6 +20,8 @@ import { useNavigate, useRouter } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
 type MobileStep = 'search' | 'confirm' | 'form';
+
+const VISIBILITIES: Visibility[] = ['public', 'friends', 'private'];
 
 function BookForm({
   selectedBook,
@@ -186,6 +192,8 @@ function MobileView() {
   const createBookMutation = useCreateBook();
   const [step, setStep] = useState<MobileStep>('search');
   const [selectedBook, setSelectedBook] = useState<AladinBook | null>(null);
+  const [visibility, setVisibility] = useState<Visibility>('public');
+  const [visibilityOpen, setVisibilityOpen] = useState(false);
 
   const { data: lookedUpBook, isFetching: isLookingUp } = useBookLookup(
     selectedBook?.isbn13 ?? null
@@ -203,6 +211,7 @@ function MobileView() {
         author: resolvedBook.author,
         cover_image_url: resolvedBook.cover || null,
         total_pages: resolvedBook.totalPages ?? null,
+        visibility,
       });
       void navigate({ to: '/books/$id', params: { id: response.reading_log.id } });
     } catch {
@@ -303,6 +312,44 @@ function MobileView() {
                 ) : null}
               </div>
             </div>
+
+            {/* Visibility */}
+            <div className="flex items-center gap-3 rounded-lg bg-muted/30 px-4 py-3">
+              <p className="text-sm text-muted-foreground flex-1">
+                {messages.books.fields.visibility}
+              </p>
+              <button
+                type="button"
+                onClick={() => setVisibilityOpen(true)}
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+              >
+                <Badge>{getVisibilityLabel(visibility)}</Badge>
+              </button>
+            </div>
+            <FieldDrawer
+              open={visibilityOpen}
+              onOpenChange={setVisibilityOpen}
+              title={messages.books.fields.visibility}
+            >
+              <div className="space-y-1">
+                {VISIBILITIES.map(v => (
+                  <button
+                    key={v}
+                    type="button"
+                    className={
+                      'w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors' +
+                      (visibility === v ? ' bg-primary/10 text-primary' : ' hover:bg-muted')
+                    }
+                    onClick={() => {
+                      setVisibility(v);
+                      setVisibilityOpen(false);
+                    }}
+                  >
+                    {getVisibilityLabel(v)}
+                  </button>
+                ))}
+              </div>
+            </FieldDrawer>
 
             <div className="flex flex-col gap-2">
               <Button

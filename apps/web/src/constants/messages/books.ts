@@ -23,7 +23,7 @@ export const booksMessages = {
   // Visibility labels
   visibility: {
     public: '전체 공개',
-    friends: '친구만',
+    friends: '친구 공개',
     private: '비공개',
   } as Record<Visibility, string>,
 

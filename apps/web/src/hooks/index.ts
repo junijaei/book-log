@@ -28,3 +28,6 @@ export {
 export { useBookSearch, useBookLookup } from './use-book-search';
 export { useIsMobile, useMediaQuery } from './use-media-query';
 export { useCreateReview, useUpdateReview, useDeleteReview } from './use-reviews';
+
+export { useBookDetail } from './use-book-detail';
+export type { BookDetailCapabilities } from './use-book-detail';

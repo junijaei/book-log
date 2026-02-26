@@ -21,7 +21,10 @@ import type {
 export type CreateBookInput = Pick<
   TablesInsert<'books'>,
   'title' | 'author' | 'cover_image_url' | 'total_pages'
->;
+> & {
+  /** Initial visibility for the reading log. Defaults to 'public' if omitted. */
+  visibility?: Visibility;
+};
 
 /** Response from POST /reading-records (book created with empty reading log) */
 export interface CreateBookResponse {

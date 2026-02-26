@@ -422,7 +422,7 @@ async function handleGetOne(
 async function handleCreate(
   supabase: SupabaseClient,
   userId: string,
-  payload: { title?: string; author?: string; cover_image_url?: string; total_pages?: number }
+  payload: { title?: string; author?: string; cover_image_url?: string; total_pages?: number; visibility?: string }
 ): Promise<Response> {
   if (!payload.title) return errorResponse('title is required');
   if (!payload.author) return errorResponse('author is required');
@@ -457,6 +457,7 @@ async function handleCreate(
         end_date: null,
         notion_page_id: null,
         user_id: userId,
+        visibility: payload.visibility ?? 'public',
       },
     ])
     .select()
