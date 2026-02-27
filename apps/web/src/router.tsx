@@ -1,4 +1,7 @@
 import { AppLayout } from '@/components/app-layout';
+import { Toaster } from '@/components/ui/sonner';
+import { Spinner } from '@/components/ui/spinner';
+import { useAuth } from '@/hooks/use-auth';
 import { ScrollToTop } from '@/lib/scroll-to-top';
 import { AuthCallbackPage } from '@/pages/auth-callback';
 import { BookDetailPage } from '@/pages/book-detail';
@@ -6,12 +9,9 @@ import { BookNewPage } from '@/pages/book-new';
 import { ErrorPage } from '@/pages/error';
 import { FeedPage } from '@/pages/feed';
 import { LoginPage } from '@/pages/login';
-import { MyBooksPage } from '@/pages/my-books';
 import { MyPage } from '@/pages/my-page';
 import { NotFoundPage } from '@/pages/not-found';
 import type { AuthContextType } from '@/types/auth';
-import { Toaster } from '@/components/ui/sonner';
-import { useAuth } from '@/hooks/use-auth';
 import {
   createRootRouteWithContext,
   createRoute,
@@ -19,7 +19,7 @@ import {
   Outlet,
   redirect,
 } from '@tanstack/react-router';
-import { Spinner } from '@/components/ui/spinner';
+import { MyBooksInteractivePage } from './pages/my-books-interactive';
 
 // ── Router context ──────────────────────────────────────────────────────────
 
@@ -116,7 +116,7 @@ const layoutRoute = createRoute({
 const indexRoute = createRoute({
   getParentRoute: () => layoutRoute,
   path: '/',
-  component: MyBooksPage,
+  component: MyBooksInteractivePage,
 });
 
 const feedRoute = createRoute({

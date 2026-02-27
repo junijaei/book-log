@@ -20,8 +20,7 @@ export default defineConfig([
       globals: globals.browser,
     },
     parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      // 이 줄을 추가하세요!
+      project: true,
       tsconfigRootDir: import.meta.dirname,
     },
     rules: {

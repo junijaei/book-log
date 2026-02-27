@@ -1,7 +1,60 @@
 {
+  // ─── ESLint ───────────────────────────────────────────────────────────────
   "eslint.workingDirectories": [
-    {
-      "mode": "auto"
-    }
-  ]
+    { "directory": "./apps/web", "changeProcessCWD": true }
+  ],
+  "eslint.validate": ["javascript", "typescript", "typescriptreact"],
+  "eslint.format.enable": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "never",
+    "source.fixAll.eslint": "explicit"
+  },
+  // ─── Prettier ────────────────────────────────────────────────────────────
+  // Explicit module path — avoids pnpm virtual store resolution issues
+  "prettier.prettierPath": "./node_modules/prettier",
+  // Monorepo: .prettierrc lives in apps/web, not root
+  "prettier.configPath": "./apps/web/.prettierrc",
+  // Disable built-in formatters so they can't shadow Prettier
+  "typescript.format.enable": false,
+  "javascript.format.enable": false,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  // ─── Tailwind CSS v4 IntelliSense ────────────────────────────────────────
+  "tailwindCSS.experimental.configFile": "./apps/web/src/index.css",
+  "tailwindCSS.includeLanguages": { "typescriptreact": "html" },
+  "tailwindCSS.classFunctions": ["cva", "cx"],
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  // Suppress false errors from @theme, @plugin, @custom-variant directives
+  "css.validate": false
 }
