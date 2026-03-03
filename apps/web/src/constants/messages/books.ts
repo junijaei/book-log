@@ -90,7 +90,7 @@ export const booksMessages = {
     deleteRecord: '기록 삭제',
     clearRating: '평점 삭제',
     showFilters: '검색/필터',
-    hideFilters: '필터 닫기',
+    hideFilters: '검색 결과 보기',
   },
 
   // Book search

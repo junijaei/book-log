@@ -1,52 +1,31 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from '@tanstack/react-router';
-import useEmblaCarousel from 'embla-carousel-react';
-import { Search, Plus, X, Filter, BookOpen, Calendar, ChevronDown, Loader2 } from 'lucide-react';
-import { useReadingRecords } from '@/hooks';
+/**
+ * My Books — interactive full-screen carousel view.
+ *
+ * Thin orchestrator: delegates filter/sort state to `useMyBooksFilters` and
+ * all animation + scroll logic to `useCarouselTween`. Renders the carousel,
+ * filter panel, and atmospheric background.
+ */
+import { useEffect, useState } from 'react';
+
+import { Link } from '@tanstack/react-router';
+import { BookOpen, ChevronDown, Loader2, Plus, Search, X } from 'lucide-react';
+
 import { BookCover } from '@/components/book-cover';
+import { PageHeader } from '@/components/page-header';
+import { SlideMetadataReveal } from '@/components/slide-metadata-reveal';
 import { StatusBadge } from '@/components/status-badge';
 import { messages } from '@/constants/messages';
-import { formatDateRange, renderRatingStars, formatPercentage } from '@/lib/constants';
+import {
+  SORT_OPTIONS,
+  STATUS_OPTIONS,
+  useCarouselTween,
+  useCoverLuminance,
+  useMyBooksFilters,
+  useReadingRecords,
+} from '@/hooks';
+import { renderRatingStars } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import type { EmblaCarouselType, EmblaEventType } from 'embla-carousel';
-import type {
-  ReadingRecord,
-  ReadingRecordFilters,
-  ReadingRecordSort,
-  ReadingStatus,
-} from '@/types';
-import { PageHeader } from '@/components/page-header';
-
-// -----------------------------------------------------------------------------
-// Constants
-// -----------------------------------------------------------------------------
-
-const TWEEN_FACTOR_BASE = 0.52;
-/** Max viewport-level rotateX during scroll (degrees). Subtle — above 6 causes nausea. */
-const PERSPECTIVE_MAX_DEG = 4;
-/** Milliseconds after scroll stops before metadata fades in. */
-const META_REVEAL_DELAY = 0;
-/** Scroll-stop detection window (ms). */
-const SCROLL_STOP_MS = 0;
-
-type SortField = 'updated_at' | 'start_date' | 'end_date';
-
-const SORT_OPTIONS: { value: SortField; label: string }[] = [
-  { value: 'updated_at', label: messages.books.filters.sortByUpdated },
-  { value: 'start_date', label: messages.books.filters.sortByStartDate },
-  { value: 'end_date', label: messages.books.filters.sortByEndDate },
-];
-
-const STATUS_OPTIONS: { value: ReadingStatus | 'all'; label: string }[] = [
-  { value: 'all', label: messages.books.filters.all },
-  { value: 'want_to_read', label: messages.books.status.want_to_read },
-  { value: 'reading', label: messages.books.status.reading },
-  { value: 'finished', label: messages.books.status.finished },
-  { value: 'abandoned', label: messages.books.status.abandoned },
-];
-
-const numberWithinRange = (n: number, min: number, max: number): number =>
-  Math.min(Math.max(n, min), max);
+import type { ReadingRecord, ReadingRecordSort, ReadingStatus } from '@/types';
 
 // -----------------------------------------------------------------------------
 // Sub-components
@@ -188,6 +167,7 @@ function BackgroundLayer({ record, isActive }: BackgroundLayerProps) {
         <div className="absolute inset-0 bg-linear-to-b from-muted/50 to-background opacity-50" />
       )}
       <div className="absolute inset-0 bg-linear-to-b from-background/50 via-transparent to-background/70" />
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-background/75 via-background/25 to-transparent" />
     </div>
   );
 }
@@ -197,359 +177,49 @@ function BackgroundLayer({ record, isActive }: BackgroundLayerProps) {
 // -----------------------------------------------------------------------------
 
 export function MyBooksInteractivePage() {
-  // ── State ───────────────────────────────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ReadingStatus | 'all'>('all');
-  const [sortBy, setSortBy] = useState<ReadingRecordSort>({
-    field: 'updated_at',
-    direction: 'desc',
-  });
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [focusedIndex, setFocusedIndex] = useState(0);
-  /** Controls the full-screen fill overlay during book-open animation. */
-  const [isBookOpening, setIsBookOpening] = useState(false);
-
-  const navigate = useNavigate();
-
-  // ── Debounce Search ─────────────────────────────────────────────────────────
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 500);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  // ── Filters ──────────────────────────────────────────────────────────────────
+  const {
+    searchQuery,
+    setSearchQuery,
+    statusFilter,
+    setStatusFilter,
+    sortBy,
+    setSortBy,
+    isFilterOpen,
+    setIsFilterOpen,
+    filters,
+  } = useMyBooksFilters();
 
   // ── Data Fetching ────────────────────────────────────────────────────────────
-  const filters: ReadingRecordFilters = {
-    scope: 'me',
-    status: statusFilter === 'all' ? undefined : [statusFilter],
-    search: debouncedSearch || undefined,
-  };
-
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } =
     useReadingRecords(filters, sortBy);
 
   const records = data?.pages.flatMap(page => page.data) ?? [];
 
-  // ── Embla Setup ──────────────────────────────────────────────────────────────
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    axis: 'y',
-    loop: false,
-    align: 'center',
-    dragFree: false,
-    skipSnaps: false,
-  });
-
-  // ── Refs: Tween ──────────────────────────────────────────────────────────────
-  const tweenFactor = useRef(0);
-  const tweenNodes = useRef<HTMLElement[]>([]);
-  const metaNodes = useRef<HTMLElement[]>([]);
-  const listenForScrollRef = useRef(true);
-  const hasMoreToLoadRef = useRef(true);
-  const loadingMoreRef = useRef(false);
-
-  // ── Refs: Perspective & scroll tracking ─────────────────────────────────────
-  /** Carousel section div — receives viewport-level rotateX during scroll. */
-  const perspectiveWrapRef = useRef<HTMLDivElement | null>(null);
-  /** Last known scroll progress for per-frame velocity calculation. */
-  const prevScrollProgressRef = useRef(0);
-  /** Debounce timer for scroll-stop detection. */
-  const scrollStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** Delay timer before metadata fades in after scroll stops. */
-  const metaRevealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** True while the user is actively scrolling. */
-  const isScrollingRef = useRef(false);
-
-  // ── Refs: Book opening animation ─────────────────────────────────────────────
-  /** True while the book-click animation is in flight — freezes tweenScale. */
-  const isBookOpeningRef = useRef(false);
-
-  // ── Embla: node / factor helpers ────────────────────────────────────────────
-  const setTweenNodes = useCallback((api: EmblaCarouselType) => {
-    tweenNodes.current = api
-      .slideNodes()
-      .map(n => n.querySelector('.embla__slide__inner') as HTMLElement);
-    metaNodes.current = api.slideNodes().map(n => {
-      const el = n.querySelector('.slide-metadata') as HTMLElement;
-      // CSS transitions for opacity (reveal) and transform (translateY) on meta
-      if (el) el.style.transition = 'opacity 400ms ease, transform 300ms ease';
-      return el;
-    });
-  }, []);
-
-  const setTweenFactor = useCallback((api: EmblaCarouselType) => {
-    tweenFactor.current = TWEEN_FACTOR_BASE * api.scrollSnapList().length;
-  }, []);
-
-  // ── Embla: per-frame tween (scale + opacity + rotateX + perspective tilt) ───
-  const tweenScale = useCallback((api: EmblaCarouselType, eventName?: EmblaEventType) => {
-    // Freeze all DOM writes while book-open animation is in flight
-    if (isBookOpeningRef.current) return;
-
-    const engine = api.internalEngine();
-    const scrollProgress = api.scrollProgress();
-    const slidesInView = api.slidesInView();
-    const isScrollEvent = eventName === 'scroll';
-
-    // ── Viewport-level perspective tilt ──────────────────────────────────
-    // Driven by scroll velocity (progress delta between frames).
-    // Scrolling DOWN  → top wider, bottom narrower (rotateX negative)
-    // Scrolling UP    → bottom wider, top narrower (rotateX positive)
-    // CSS transition is REMOVED during active scroll so each frame snaps;
-    // it's restored by handleScrollStop for the smooth return to neutral.
-    if (isScrollEvent && perspectiveWrapRef.current) {
-      const velocity = scrollProgress - prevScrollProgressRef.current;
-      const angle = numberWithinRange(-velocity * 600, -PERSPECTIVE_MAX_DEG, PERSPECTIVE_MAX_DEG);
-      perspectiveWrapRef.current.style.transition = 'none';
-      perspectiveWrapRef.current.style.transform = `rotateX(${angle}deg)`;
-    }
-    prevScrollProgressRef.current = scrollProgress;
-
-    // ── Per-slide scale / opacity / rotateX / blur ───────────────────────
-    api.scrollSnapList().forEach((scrollSnap, snapIndex) => {
-      const diffToTarget = scrollSnap - scrollProgress;
-      const slidesInSnap = engine.slideRegistry[snapIndex];
-
-      slidesInSnap.forEach(slideIndex => {
-        if (isScrollEvent && !slidesInView.includes(slideIndex)) return;
-
-        const tweenNode = tweenNodes.current[slideIndex];
-        if (!tweenNode) return;
-
-        const tweenValue = 1 - Math.abs(diffToTarget * tweenFactor.current);
-        const scale = numberWithinRange(tweenValue, 0, 1);
-        const slideScale = numberWithinRange(0.65 + scale * 0.35, 0.65, 1.0);
-        const slideOpacity = numberWithinRange(0.07 + scale * 0.93, 0.07, 1.0);
-        // Signed rotateX — slides above tilt back (−), slides below tilt forward (+)
-        const rotateXDeg = Math.sign(diffToTarget) * (1 - scale) * 22;
-        const brightness = 0.12 + scale * 0.88;
-        const blurPx = (1 - scale) * 8;
-
-        tweenNode.style.transform = `perspective(600px) scale(${slideScale}) rotateX(${rotateXDeg}deg)`;
-        tweenNode.style.opacity = String(slideOpacity);
-        tweenNode.style.filter =
-          scale > 0.97 ? 'none' : `brightness(${brightness}) blur(${blurPx}px)`;
-
-        // translateY on metadata — opacity is managed by the scroll system, NOT here
-        const metaNode = metaNodes.current[slideIndex];
-        if (metaNode) {
-          metaNode.style.transform = `translateY(${(1 - scale) * 24}px)`;
-        }
-      });
-    });
-  }, []);
-
-  // ── Scroll stop handler ──────────────────────────────────────────────────────
-  // Called ~150ms after the last scroll event. Restores perspective and
-  // schedules the metadata fade-in after an intentional pause.
-  const handleScrollStop = useCallback(() => {
-    isScrollingRef.current = false;
-
-    // Restore perspective tilt with an ease-out transition
-    if (perspectiveWrapRef.current) {
-      perspectiveWrapRef.current.style.transition = 'transform 500ms cubic-bezier(0.25, 1, 0.5, 1)';
-      perspectiveWrapRef.current.style.transform = 'none';
-    }
-
-    // Reveal metadata after intentional delay — if scroll resumes, this is cancelled
-    if (metaRevealTimerRef.current) clearTimeout(metaRevealTimerRef.current);
-    metaRevealTimerRef.current = setTimeout(() => {
-      metaNodes.current.forEach(node => {
-        if (node) node.style.opacity = '1';
-      });
-    }, META_REVEAL_DELAY);
-  }, []);
-
-  // ── Embla: scroll handler (meta hide + infinite load) ───────────────────────
-  const onScroll = useCallback(
-    (api: EmblaCarouselType) => {
-      // ── Meta visibility ────────────────────────────────────────────────────
-      const wasScrolling = isScrollingRef.current;
-      isScrollingRef.current = true;
-
-      metaNodes.current.forEach(node => {
-        if (!node) return;
-        if (!wasScrolling) {
-          // First scroll event of a gesture: suppress transition for instant hide
-          const saved = node.style.transition;
-          node.style.transition = 'none';
-          node.style.opacity = '0';
-          requestAnimationFrame(() => {
-            if (node) node.style.transition = saved;
-          });
-        } else {
-          node.style.opacity = '0';
-        }
-      });
-
-      // Cancel any pending meta reveal (scroll resumed before delay completed)
-      if (metaRevealTimerRef.current) {
-        clearTimeout(metaRevealTimerRef.current);
-        metaRevealTimerRef.current = null;
-      }
-
-      // Re-arm scroll-stop detection
-      if (scrollStopTimerRef.current) clearTimeout(scrollStopTimerRef.current);
-      scrollStopTimerRef.current = setTimeout(handleScrollStop, SCROLL_STOP_MS);
-
-      // ── Infinite scroll ────────────────────────────────────────────────────
-      if (!listenForScrollRef.current || !hasMoreToLoadRef.current) return;
-
-      const lastSlide = api.slideNodes().length - 1;
-      const lastSlideInView = api.slidesInView().includes(lastSlide);
-
-      if (lastSlideInView && !loadingMoreRef.current) {
-        listenForScrollRef.current = false;
-        loadingMoreRef.current = true;
-        fetchNextPage();
-      }
-    },
-    [fetchNextPage, handleScrollStop]
-  );
-
-  // ── Embla: engine reload on slide addition ────────────────────────────────
-  const onSlideChanges = useCallback((api: EmblaCarouselType) => {
-    const reloadEmbla = () => {
-      const oldEngine = api.internalEngine();
-      api.reInit();
-      const newEngine = api.internalEngine();
-
-      const copyModules = [
-        'scrollBody',
-        'location',
-        'offsetLocation',
-        'previousLocation',
-        'target',
-      ] as const;
-      copyModules.forEach(m => {
-        Object.assign(newEngine[m], oldEngine[m]);
-      });
-
-      newEngine.translate.to(oldEngine.location.get());
-      const { index } = newEngine.scrollTarget.byDistance(0, false);
-      newEngine.index.set(index);
-      newEngine.animation.start();
-
-      loadingMoreRef.current = false;
-      listenForScrollRef.current = true;
-    };
-
-    const engine = api.internalEngine();
-    if (hasMoreToLoadRef.current && engine.dragHandler.pointerDown()) {
-      api.on('pointerUp', reloadEmbla);
-    } else {
-      reloadEmbla();
-    }
-  }, []);
-
-  // ── Embla: focused slide tracking ────────────────────────────────────────
-  const onSelect = useCallback((api: EmblaCarouselType) => {
-    setFocusedIndex(api.selectedScrollSnap());
-  }, []);
-
-  // ── Book-click: 3-phase cinematic animation ───────────────────────────────
-  // Phase 1 (0–180ms)  : book shrinks — tactile press feedback
-  // Phase 2 (180–620ms): book expands with rightward rotateY — book-opening 3D
-  // Phase 3 (550ms+)   : background fills screen → navigate
-  const handleBookClick = useCallback(
-    (e: React.MouseEvent, recordId: string, slideIdx: number) => {
-      e.preventDefault();
-      if (isBookOpeningRef.current) return;
-      isBookOpeningRef.current = true;
-
-      const slideInner = tweenNodes.current[slideIdx];
-      const metaNode = metaNodes.current[slideIdx];
-
-      // Blur and fade every slide that isn't being opened
-      tweenNodes.current.forEach((node, i) => {
-        if (i !== slideIdx && node) {
-          node.style.transition = 'filter 220ms ease, opacity 220ms ease';
-          node.style.filter = 'blur(20px)';
-          node.style.opacity = '0';
-        }
-      });
-
-      // Instantly hide metadata
-      if (metaNode) {
-        metaNode.style.transition = 'opacity 100ms ease';
-        metaNode.style.opacity = '0';
-      }
-
-      // Phase 1: shrink (tactile press)
-      if (slideInner) {
-        slideInner.style.transition = 'transform 180ms cubic-bezier(0.4, 0, 1, 1)';
-        slideInner.style.transformOrigin = 'center center';
-        slideInner.style.transform = 'perspective(600px) scale(0.88)';
-      }
-
-      // Phase 2: expand + book-open rotateY
-      // rotateY(-15deg) with center origin → right side swings toward viewer,
-      // appearing larger than the left — simulates a book cover opening.
-      setTimeout(() => {
-        if (!slideInner) return;
-        slideInner.style.transition = 'transform 440ms cubic-bezier(0.34, 1.56, 0.64, 1)';
-        slideInner.style.transformOrigin = 'center center';
-        slideInner.style.transform = 'perspective(400px) scale(1.08) rotateY(-15deg)';
-      }, 180);
-
-      // Phase 3: trigger full-screen overlay
-      setTimeout(() => {
-        setIsBookOpening(true);
-      }, 550);
-
-      // Navigate after animation completes
-      setTimeout(() => {
-        void navigate({ to: '/books/$id', params: { id: recordId } });
-      }, 800);
-    },
-    [navigate]
-  );
-
-  // ── Embla: initialization & event binding ────────────────────────────────
-  useEffect(() => {
-    if (!emblaApi) return;
-
-    setTweenNodes(emblaApi);
-    setTweenFactor(emblaApi);
-    tweenScale(emblaApi);
-
-    emblaApi
-      .on('reInit', setTweenNodes)
-      .on('reInit', setTweenFactor)
-      .on('reInit', tweenScale)
-      .on('scroll', tweenScale)
-      .on('slideFocus', tweenScale)
-      .on('scroll', onScroll)
-      .on('slidesChanged', onSlideChanges)
-      .on('select', onSelect);
-
-    return () => {
-      emblaApi
-        .off('reInit', setTweenNodes)
-        .off('reInit', setTweenFactor)
-        .off('reInit', tweenScale)
-        .off('scroll', tweenScale)
-        .off('slideFocus', tweenScale)
-        .off('scroll', onScroll)
-        .off('slidesChanged', onSlideChanges)
-        .off('select', onSelect);
-    };
-  }, [emblaApi, tweenScale, onScroll, onSlideChanges, onSelect, setTweenNodes, setTweenFactor]);
-
-  // ── Timer cleanup on unmount ─────────────────────────────────────────────
-  useEffect(() => {
-    return () => {
-      if (scrollStopTimerRef.current) clearTimeout(scrollStopTimerRef.current);
-      if (metaRevealTimerRef.current) clearTimeout(metaRevealTimerRef.current);
-    };
-  }, []);
-
-  // ── Sync hasNextPage to ref ──────────────────────────────────────────────
-  useEffect(() => {
-    hasMoreToLoadRef.current = !!hasNextPage;
-  }, [hasNextPage]);
+  // ── Carousel & Animation ─────────────────────────────────────────────────────
+  const {
+    emblaRef,
+    perspectiveWrapRef,
+    focusedIndex,
+    isBookOpening,
+    isMetaVisible,
+    handleBookClick,
+  } = useCarouselTween({ fetchNextPage, hasNextPage });
 
   // ── Background cross-fade management ─────────────────────────────────────
   const currentRecord = records[focusedIndex] ?? null;
+
+  // ── Luminance-driven contrast adaptation ──────────────────────────────────
+  const { isLight: coverIsLight, isResolved: luminanceReady } = useCoverLuminance(
+    currentRecord?.book.cover_image_url
+  );
+
+  const starColorClass = luminanceReady
+    ? coverIsLight
+      ? 'text-amber-600 dark:text-amber-400' // dark amber on bright bg, lighter in dark mode
+      : 'text-amber-400' // bright amber on dark bg (both modes)
+    : 'text-yellow-500'; // neutral fallback while unresolved
+
   const [bgRecord, setBgRecord] = useState<ReadingRecord | null>(null);
   const [prevBgRecord, setPrevBgRecord] = useState<ReadingRecord | null>(null);
 
@@ -601,13 +271,12 @@ export function MyBooksInteractivePage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsFilterOpen(true)}
-              className="p-2 rounded-full hover:bg-muted/20 transition-colors"
+              className="p-2 rounded-full hover:bg-muted/20 transition-colors relative"
               aria-label={messages.books.buttons.showFilters}
             >
-              {filters.search || filters.status ? (
-                <Filter className="w-5 h-5 text-primary" />
-              ) : (
-                <Search className="w-5 h-5" />
+              <Search className="w-5 h-5" />
+              {(filters.search || filters.status) && (
+                <span className="absolute top-1 right-1 text-xs bg-destructive text-destructive-foreground rounded-full size-1" />
               )}
             </button>
             <Link
@@ -634,11 +303,6 @@ export function MyBooksInteractivePage() {
         setSortBy={setSortBy}
       />
 
-      {/* ── Carousel section ────────────────────────────────────────────────────
-          This div is the perspective-tilt target. During scroll, tweenScale
-          applies rotateX here (no transition). On scroll stop, handleScrollStop
-          restores it with an ease-out transition.
-          `transformOrigin: center center` rotates around the visual midpoint. */}
       <div
         className="absolute inset-x-0 top-0 bottom-0 z-10"
         ref={perspectiveWrapRef}
@@ -688,6 +352,7 @@ export function MyBooksInteractivePage() {
                     >
                       {/* Cover with shadow */}
                       <div
+                        data-type="book-cover"
                         className="slide-cover-wrap relative mb-8 rounded-xl overflow-hidden"
                         style={{
                           boxShadow: '0 40px 100px rgba(0,0,0,0.6), 0 8px 30px rgba(0,0,0,0.4)',
@@ -703,54 +368,31 @@ export function MyBooksInteractivePage() {
                         </div>
                       </div>
 
-                      {/* Metadata — opacity & translateY driven by scroll system */}
-                      <div className="slide-metadata text-center space-y-3 max-w-xs sm:max-w-sm will-change-transform">
-                        <h2 className="text-2xl sm:text-3xl font-bold leading-tight line-clamp-2 drop-shadow-md">
+                      {/* Metadata — visibility driven by carousel, animation by SlideMetadataReveal */}
+                      <SlideMetadataReveal
+                        isVisible={isMetaVisible}
+                        className="text-center space-y-2 max-w-xs sm:max-w-sm z-10"
+                      >
+                        <h2 className="text-xl sm:text-3xl font-bold leading-tight line-clamp-2 break-keep">
                           {record.book.title}
                         </h2>
-                        <p className="text-lg text-muted-foreground font-medium line-clamp-1">
+                        <p className="text-md text-muted-foreground font-medium line-clamp-1">
                           {record.book.author}
                         </p>
 
-                        <div className="flex flex-col items-center gap-2 mt-4">
-                          {record.reading_log.status === 'reading' && record.book.total_pages && (
-                            <div className="w-full space-y-1">
-                              <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden backdrop-blur-sm">
-                                <div
-                                  className="h-full bg-primary transition-all duration-500"
-                                  style={{
-                                    width: `${((record.reading_log.current_page ?? 0) / record.book.total_pages) * 100}%`,
-                                  }}
-                                />
-                              </div>
-                              <p className="text-xs text-muted-foreground">
-                                {formatPercentage(
-                                  record.reading_log.current_page ?? 0,
-                                  record.book.total_pages
-                                )}
-                              </p>
-                            </div>
-                          )}
-
+                        <div className="flex flex-col items-center">
                           {record.reading_log.rating && (
-                            <span className="text-xl tracking-widest text-yellow-500 drop-shadow-sm">
+                            <span
+                              className={cn(
+                                'text-xl tracking-widest filter-[drop-shadow(0_1px_8px_rgb(0_0_0/0.5))]',
+                                starColorClass
+                              )}
+                            >
                               {renderRatingStars(record.reading_log.rating)}
                             </span>
                           )}
-
-                          {(record.reading_log.start_date || record.reading_log.end_date) && (
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground/80 mt-1 bg-background/10 px-3 py-1 rounded-full backdrop-blur-sm border border-white/5">
-                              <Calendar className="w-3 h-3" />
-                              <span>
-                                {formatDateRange(
-                                  record.reading_log.start_date,
-                                  record.reading_log.end_date
-                                )}
-                              </span>
-                            </div>
-                          )}
                         </div>
-                      </div>
+                      </SlideMetadataReveal>
                     </Link>
                   </div>
                 </div>
@@ -769,26 +411,6 @@ export function MyBooksInteractivePage() {
           </div>
         )}
       </div>
-
-      {/* ── Pagination dots ────────────────────────────────────────────────────
-      {records.length > 0 && (
-        <div className="fixed bottom-20 left-0 right-0 z-50 flex justify-center pointer-events-none">
-          <div className="flex gap-1.5 px-4 py-2 bg-background/20 backdrop-blur-xl rounded-full border border-white/5 shadow-lg">
-            {records.map((_, idx) => {
-              if (Math.abs(idx - focusedIndex) > 3) return null;
-              return (
-                <div
-                  key={idx}
-                  className={cn(
-                    'h-2 rounded-full transition-all duration-300',
-                    idx === focusedIndex ? 'bg-primary w-4' : 'bg-muted-foreground/40 w-2'
-                  )}
-                />
-              );
-            })}
-          </div>
-        </div>
-      )} */}
     </>
   );
 }

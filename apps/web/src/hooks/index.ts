@@ -31,3 +31,12 @@ export { useCreateReview, useUpdateReview, useDeleteReview } from './use-reviews
 
 export { useBookDetail } from './use-book-detail';
 export type { BookDetailCapabilities } from './use-book-detail';
+
+export { useCoverLuminance } from './use-cover-luminance';
+export type { CoverLuminanceResult } from './use-cover-luminance';
+
+export { useMyBooksFilters, SORT_OPTIONS, STATUS_OPTIONS } from './use-my-books-filters';
+export type { UseMyBooksFiltersReturn, SortField } from './use-my-books-filters';
+
+export { useCarouselTween } from './use-carousel-tween';
+export type { UseCarouselTweenReturn } from './use-carousel-tween';
